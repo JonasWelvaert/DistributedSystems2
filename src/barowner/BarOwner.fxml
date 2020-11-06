@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.image.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.canvas.*?>
 <?import javafx.geometry.*?>
@@ -8,9 +9,9 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="360.0" prefWidth="380.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="barowner.BarOwnerController">
+<AnchorPane prefWidth="300.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="barowner.BarOwnerController">
    <children>
-      <Label fx:id="bitstream" layoutX="19.0" layoutY="111.0" text="Here comes a bitstream" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="100.0" />
+      <Label text="Name of your business:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0" />
       <TextField fx:id="horecaName" promptText="horeca name" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="30.0" />
       <FlowPane AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="70.0">
          <children>
@@ -25,8 +26,8 @@
                </FlowPane.margin></Button>
          </children>
       </FlowPane>
-      <Label fx:id="proofOfRegistration_label" text="Today's proof of registration:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="130.0" />
-      <Canvas fx:id="proofOfRegistration" height="200.0" width="200.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="150.0" />
-      <Label text="Name of your business:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0" />
+      <ImageView fx:id="qrCode" fitHeight="200.0" fitWidth="200.0" layoutX="8.0" layoutY="105.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" />
+      <Label fx:id="proofOfRegistration_label" text="Today's proof of registration:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="310.0" />
+      <Canvas fx:id="proofOfRegistration" height="200.0" width="200.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="330.0" />
    </children>
 </AnchorPane>

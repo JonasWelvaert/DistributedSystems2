@@ -1,5 +1,6 @@
 package barowner;
 
+import java.awt.Window;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -15,12 +16,13 @@ import javafx.stage.Stage;
 public class BarOwner extends Application {
 	private static String fileName;
 	private static String barName;
+	private static Stage primaryStage;
 
 	@Override
 	public void start(Stage primaryStage) throws IOException {
-		Parent root = FXMLLoader.load(getClass().getResource("/barowner/BarOwner.fxml"));
-
-		Scene scene = new Scene(root, 380, 360);
+		this.primaryStage = primaryStage;
+		Parent root = FXMLLoader.load(getClass().getResource("/barowner/BarOwnerRegister.fxml"));
+		Scene scene = new Scene(root);
 
 		primaryStage.setTitle("Bar owner's application");
 		primaryStage.setScene(scene);
@@ -28,30 +30,33 @@ public class BarOwner extends Application {
 		primaryStage.show();
 	}
 
-	public static void main(String[] args) {
-		String barName = "";
-		if (args.length == 0) {
-			Scanner scanner = new Scanner(System.in);
-			while (barName.equals("")) {
-				System.out.println("Give a name for your business: ");
-				barName = scanner.nextLine();
-			}
-			scanner.close();
-		} else {
-			barName = String.join(" ", args);
-			if (barName.equals("")) {
-				System.out.println("Fill in a good business name.");
-				System.exit(1);
-			}
+	public static void setSceneInfo() {
+		try {
+			FXMLLoader loader = new FXMLLoader();
+			loader.setLocation(BarOwner.class.getResource("/barowner/BarOwner.fxml"));
+			Parent root = loader.load();
+			Scene scene = new Scene(root, 300, 540);
+			primaryStage.setScene(scene);
+			primaryStage.show();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(1);
 		}
+	}
+
+	public static void main(String[] args) {
+		String barName = String.join(" ", args);
 		fileName = System.getProperty("user.home") + "/.contacttracing/" + barName + ".csv";
 		try {
 			Scanner scanner = new Scanner(new File(fileName));
 			while (scanner.hasNextLine()) {
 				BarOwner.barName = scanner.nextLine();
+				// TODO other information like QR bitstream ...
 			}
 			scanner.close();
 		} catch (FileNotFoundException e) {
+			// TODO enroll to registrar
 			BarOwner.setBarName(barName);
 		}
 

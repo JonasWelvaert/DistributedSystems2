@@ -1,17 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.*?>
+<?import javafx.scene.canvas.*?>
 <?import javafx.geometry.*?>
 <?import java.lang.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="200.0" prefWidth="300.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="barowner.BarOwnerController">
+<AnchorPane prefHeight="360.0" prefWidth="380.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="barowner.BarOwnerController">
    <children>
-      <Label layoutX="14.0" layoutY="14.0" text="Name of your business:" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="8.0" />
-      <TextField layoutX="14.0" layoutY="41.0" promptText="horeca name" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="32.0" />
-      <Button fx:id="enrollContactTracingButton" layoutX="14.0" layoutY="85.0" mnemonicParsing="false" text="Enroll contact tracing" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="64.0" />
-      <Label layoutX="14.0" layoutY="124.0" text="Your QR code" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="102.0" />
-      <Label layoutX="13.0" layoutY="145.0" text="Today's proof of registration" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="140.0" />
+      <Label fx:id="bitstream" layoutX="19.0" layoutY="111.0" text="Here comes a bitstream" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="100.0" />
+      <TextField fx:id="horecaName" promptText="horeca name" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="30.0" />
+      <FlowPane AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="70.0">
+         <children>
+            <Label fx:id="bitstream_label" text="Your QR code:" underline="true">
+               <FlowPane.margin>
+                  <Insets right="8.0" />
+               </FlowPane.margin>
+            </Label>
+            <Button fx:id="copyToClipboard" mnemonicParsing="false" text="Copy to clipboard">
+               <FlowPane.margin>
+                  <Insets />
+               </FlowPane.margin></Button>
+         </children>
+      </FlowPane>
+      <Label fx:id="proofOfRegistration_label" text="Today's proof of registration:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="130.0" />
+      <Canvas fx:id="proofOfRegistration" height="200.0" width="200.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="150.0" />
+      <Label text="Name of your business:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0" />
    </children>
 </AnchorPane>

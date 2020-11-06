@@ -39,7 +39,6 @@ public class BarOwner extends Application {
 			scanner.close();
 		} else {
 			barName = String.join(" ", args);
-			System.out.println(barName);
 			if (barName.equals("")) {
 				System.out.println("Fill in a good business name.");
 				System.exit(1);
@@ -53,7 +52,6 @@ public class BarOwner extends Application {
 			}
 			scanner.close();
 		} catch (FileNotFoundException e) {
-			System.out.println("FileNotFoundException in BarOwner.main()");
 			BarOwner.setBarName(barName);
 		}
 
@@ -78,7 +76,9 @@ public class BarOwner extends Application {
 			fw.close();
 			BarOwner.barName = barName;
 		} catch (IOException e) {
-			System.out.println("IOException in BarOwner.setBarName():second try");
+			System.out.println("IOException in BarOwner.setBarName()");
+			e.printStackTrace();
+			System.exit(1);
 		}
 	}
 }

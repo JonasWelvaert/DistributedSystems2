@@ -26,7 +26,7 @@ public class BarOwner extends Application {
 	private static String fileName;
 	private static String horecaName;
 	private static String horecaNumber;
-	private static String phoneNumber;
+	private static String address;
 	private static String password;
 	private static Stage primaryStage;
 
@@ -61,12 +61,12 @@ public class BarOwner extends Application {
 		}
 	}
 
-	public static void register(String horecaName, String horecaNumber, String phoneNumber, String password) {
+	public static void register(String horecaName, String horecaNumber, String address, String password) {
 		boolean isRegistered = false;
 		try {
 			Registry myRegistry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
 			RegistrarInterface registrar = (RegistrarInterface) myRegistry.lookup(Values.REGISTRAR_SERVICE);
-			List<byte[]> ret = registrar.enrollHORECA(horecaName, horecaNumber, phoneNumber, password);
+			List<byte[]> ret = registrar.enrollHORECA(horecaName, horecaNumber, address, password);
 			if (ret != null) {
 				// TODO verwerken van ret;
 				isRegistered = true;
@@ -89,7 +89,7 @@ public class BarOwner extends Application {
 				fw = new FileWriter(file);
 				fw.write(horecaName + System.lineSeparator());
 				fw.write(horecaNumber + System.lineSeparator());
-				fw.write(phoneNumber + System.lineSeparator());
+				fw.write(address + System.lineSeparator());
 				fw.write(password + System.lineSeparator()); // TODO: password/file encrypteren
 				fw.flush();
 				fw.close();
@@ -99,7 +99,7 @@ public class BarOwner extends Application {
 			}
 			BarOwner.horecaName = horecaName;
 			BarOwner.horecaNumber = horecaNumber;
-			BarOwner.phoneNumber = phoneNumber;
+			BarOwner.address = address;
 			BarOwner.password = password;
 
 			BarOwner.openInfoScene();
@@ -135,7 +135,7 @@ public class BarOwner extends Application {
 		if (inhoud != null && horecaName.equals(inhoud[0]) && password.equals(inhoud[3])) {
 			BarOwner.horecaName = inhoud[0];
 			BarOwner.horecaNumber = inhoud[1];
-			BarOwner.phoneNumber = inhoud[2];
+			BarOwner.address = inhoud[2];
 			BarOwner.password = inhoud[3];
 			BarOwner.openInfoScene();
 		} else {

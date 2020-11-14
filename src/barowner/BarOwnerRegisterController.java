@@ -16,7 +16,7 @@ public class BarOwnerRegisterController {
 	@FXML
 	private TextField horecaNumberR;
 	@FXML
-	private TextField phoneNumberR;
+	private TextField addressR;
 	@FXML
 	private PasswordField passwordR;
 	@FXML
@@ -38,14 +38,14 @@ public class BarOwnerRegisterController {
 				if (horecaNumberR.getText() == null || horecaNumberR.getText().equals("")) {
 					valid = false;
 				}
-				if (phoneNumberR.getText() == null || phoneNumberR.getText().equals("")) {
+				if (addressR.getText() == null || addressR.getText().equals("")) {
 					valid = false;
 				}
 				if (passwordR.getText() == null || passwordR.getText().equals("")) {
 					valid = false;
 				}
 				if (valid) {
-					BarOwner.register(horecaNameR.getText(), horecaNumberR.getText(), phoneNumberR.getText(),
+					BarOwner.register(horecaNameR.getText(), horecaNumberR.getText(), addressR.getText(),
 							passwordR.getText());
 				}
 			}

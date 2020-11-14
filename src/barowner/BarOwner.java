@@ -4,13 +4,23 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.rmi.AccessException;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.util.List;
 import java.util.Scanner;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
+import registrar.RegistrarInterface;
+import values.Values;
 
 public class BarOwner extends Application {
 	private static String fileName;
@@ -26,7 +36,7 @@ public class BarOwner extends Application {
 
 	@Override
 	public void start(Stage primaryStage) throws IOException {
-		this.primaryStage = primaryStage;
+		BarOwner.primaryStage = primaryStage;
 		Parent root = FXMLLoader.load(getClass().getResource("/barowner/BarOwnerRegister.fxml"));
 		Scene scene = new Scene(root);
 
@@ -52,16 +62,26 @@ public class BarOwner extends Application {
 	}
 
 	public static void register(String horecaName, String horecaNumber, String phoneNumber, String password) {
-
-		// TODO: register bij Registrar...
-		boolean isRegistered = true;
+		boolean isRegistered = false;
+		try {
+			Registry myRegistry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
+			RegistrarInterface registrar = (RegistrarInterface) myRegistry.lookup(Values.REGISTRAR_SERVICE);
+			List<byte[]> ret = registrar.enrollHORECA(horecaName, horecaNumber, phoneNumber, password);
+			if (ret != null) {
+				// TODO verwerken van ret;
+				isRegistered = true;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			System.exit(1);
+		}
 
 		if (isRegistered) {
-			File dir = new File(System.getProperty("user.home") + "\\.contacttracing\\");
+			File dir = new File(Values.FILE_DIR);
 			if (!dir.exists()) {
 				dir.mkdir();
 			}
-			fileName = System.getProperty("user.home") + "\\.contacttracing\\barOwner_" + horecaName + ".csv";
+			fileName = Values.FILE_DIR + "barOwner_" + horecaName + ".csv";
 			File file = new File(fileName);
 			FileWriter fw;
 			try {
@@ -84,12 +104,16 @@ public class BarOwner extends Application {
 
 			BarOwner.openInfoScene();
 		} else {
-			// TODO: not registered because of errors
+			Alert alert = new Alert(AlertType.INFORMATION);
+			alert.setTitle("Something went wrong!");
+			alert.setHeaderText("Registration failed");
+			alert.setContentText("Plaese check the inputfields for errors!");
+			alert.showAndWait();
 		}
 	}
 
 	public static void login(String horecaName, String password) {
-		fileName = System.getProperty("user.home") + "\\.contacttracing\\barOwner_" + horecaName + ".csv";
+		fileName = Values.FILE_DIR + "barOwner_" + horecaName + ".csv";
 		System.out.println(fileName);
 		File file = new File(fileName);
 		String[] inhoud = new String[4];
@@ -115,12 +139,20 @@ public class BarOwner extends Application {
 			BarOwner.password = inhoud[3];
 			BarOwner.openInfoScene();
 		} else {
-			// TODO: foute inlogGegevens.
+			Alert alert = new Alert(AlertType.INFORMATION);
+			alert.setTitle("Something went wrong!");
+			alert.setHeaderText("Login failed");
+			alert.setContentText("Plaese check the inputfields for errors!");
+			alert.showAndWait();
 		}
 	}
 
 	public static String getHorecaName() {
 		return horecaName;
+	}
+
+	public static String getHorecaNumber() {
+		return horecaNumber;
 	}
 
 }

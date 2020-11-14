@@ -4,6 +4,7 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
 public class BarOwnerRegisterController {
@@ -17,13 +18,13 @@ public class BarOwnerRegisterController {
 	@FXML
 	private TextField phoneNumberR;
 	@FXML
-	private TextField passwordR;
+	private PasswordField passwordR;
 	@FXML
 	private Button loginButton;
 	@FXML
 	private TextField horecaNameL;
 	@FXML
-	private TextField passwordL;
+	private PasswordField passwordL;
 
 	@FXML
 	private void initialize() {

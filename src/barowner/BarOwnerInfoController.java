@@ -2,6 +2,7 @@ package barowner;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.Arrays;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -9,7 +10,6 @@ import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.Clipboard;
@@ -41,8 +41,8 @@ public class BarOwnerInfoController {
 	private void initialize() {
 		horecaName.setText(BarOwner.getHorecaName());
 		// TODO veranderen van qr tekst
-		String qrCodeText = BarOwner.getHorecaName();
-		ByteArrayOutputStream out = QRCode.from(qrCodeText).to(ImageType.GIF).withSize(200, 200).stream();
+		String[] qrCodeText = {"R_i", BarOwner.getHorecaNumber(), "H(R_i,nym_(CF,day_i))"};
+		ByteArrayOutputStream out = QRCode.from(Arrays.toString(qrCodeText)).to(ImageType.GIF).withSize(200, 200).stream();
 		ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
 		Image image = new Image(in);
 		qrCode.setImage(image);
@@ -51,13 +51,13 @@ public class BarOwnerInfoController {
 			public void handle(ActionEvent event) {
 				Clipboard clipboard = Clipboard.getSystemClipboard();
 				ClipboardContent content = new ClipboardContent();
-				content.putString(qrCodeText); // TODO: veranderen
+				content.putString(Arrays.toString(qrCodeText)); // TODO: veranderen
 				clipboard.setContent(content);
 			}
 		});
-		
+
 		// TODO change this figure.
 		proofOfRegistration.getGraphicsContext2D().fillOval(10, 60, 30, 30);
-		
+
 	}
 }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<TabPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="visitor.VisitorRegisterController">
+   <tabs>
+      <Tab closable="false" text="Register">
+         <content>
+            <AnchorPane>
+	<!-- TODO Add Nodes -->
+</AnchorPane>
+         </content>
+      </Tab>
+      <Tab closable="false" text="Login">
+        <content>
+          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0" />
+        </content>
+      </Tab>
+   </tabs>
+</TabPane>

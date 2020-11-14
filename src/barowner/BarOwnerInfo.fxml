@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.text.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.canvas.*?>
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane prefWidth="300.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="barowner.BarOwnerInfoController">
+   <children>
+      <Label fx:id="horecaName" text="Name of your business" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0">
+         <font>
+            <Font size="24.0" />
+         </font></Label>
+      <FlowPane AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="40.0">
+         <children>
+            <Label fx:id="bitstream_label" text="Your QR code:" underline="true">
+               <FlowPane.margin>
+                  <Insets right="8.0" />
+               </FlowPane.margin>
+            </Label>
+            <Button fx:id="copyToClipboard" mnemonicParsing="false" text="Copy to clipboard">
+               <FlowPane.margin>
+                  <Insets />
+               </FlowPane.margin></Button>
+         </children>
+      </FlowPane>
+      <ImageView fx:id="qrCode" fitHeight="200.0" fitWidth="200.0" layoutX="8.0" layoutY="105.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="75.0" />
+      <Label fx:id="proofOfRegistration_label" text="Today's proof of registration:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="280.0" />
+      <Canvas fx:id="proofOfRegistration" height="200.0" width="200.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="300.0" />
+   </children>
+</AnchorPane>

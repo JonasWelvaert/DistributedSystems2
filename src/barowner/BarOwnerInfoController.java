@@ -17,10 +17,10 @@ import javafx.scene.input.ClipboardContent;
 import net.glxn.qrgen.QRCode;
 import net.glxn.qrgen.image.ImageType;
 
-public class BarOwnerController {
+public class BarOwnerInfoController {
 
 	@FXML
-	private TextField horecaName;
+	private Label horecaName;
 
 	@FXML
 	private Label bitstream_label;
@@ -39,22 +39,25 @@ public class BarOwnerController {
 
 	@FXML
 	private void initialize() {
-		horecaName.setEditable(false);
-		horecaName.setText(BarOwner.getBarName());
-		ByteArrayOutputStream out = QRCode.from(BarOwner.getBarName()).to(ImageType.GIF).withSize(200, 200).stream();//TODO veranderen
+		horecaName.setText(BarOwner.getHorecaName());
+		// TODO veranderen van qr tekst
+		String qrCodeText = BarOwner.getHorecaName();
+		ByteArrayOutputStream out = QRCode.from(qrCodeText).to(ImageType.GIF).withSize(200, 200).stream();
 		ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
 		Image image = new Image(in);
-		qrCode.setImage(image);;
-		// TODO change this figure.
-		proofOfRegistration.getGraphicsContext2D().fillOval(10, 60, 30, 30);
+		qrCode.setImage(image);
 		copyToClipboard.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
 				Clipboard clipboard = Clipboard.getSystemClipboard();
 				ClipboardContent content = new ClipboardContent();
-				content.putString(BarOwner.getBarName()); // TODO: veranderen
+				content.putString(qrCodeText); // TODO: veranderen
 				clipboard.setContent(content);
 			}
 		});
+		
+		// TODO change this figure.
+		proofOfRegistration.getGraphicsContext2D().fillOval(10, 60, 30, 30);
+		
 	}
 }

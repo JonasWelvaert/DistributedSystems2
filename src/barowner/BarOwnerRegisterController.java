@@ -5,34 +5,66 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 
 public class BarOwnerRegisterController {
 
 	@FXML
 	private Button registerButton;
-	
 	@FXML
-	private TextField horecaName;
-	
+	private TextField horecaNameR;
 	@FXML
-	private TextField horecaNumber;
-	
+	private TextField horecaNumberR;
 	@FXML
-	private TextField phoneNumber;
-	
+	private TextField phoneNumberR;
+	@FXML
+	private TextField passwordR;
+	@FXML
+	private Button loginButton;
+	@FXML
+	private TextField horecaNameL;
+	@FXML
+	private TextField passwordL;
+
 	@FXML
 	private void initialize() {
 		registerButton.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {
-				//TODO register to registrar
-				//check if fields are OK.
-				BarOwner.setBarName(horecaName.getText());
-				BarOwner.setSceneInfo();
+				boolean valid = true;
+				if (horecaNameR.getText() == null || horecaNameR.getText().equals("")) {
+					valid = false;
+				}
+				if (horecaNumberR.getText() == null || horecaNumberR.getText().equals("")) {
+					valid = false;
+				}
+				if (phoneNumberR.getText() == null || phoneNumberR.getText().equals("")) {
+					valid = false;
+				}
+				if (passwordR.getText() == null || passwordR.getText().equals("")) {
+					valid = false;
+				}
+				if (valid) {
+					BarOwner.register(horecaNameR.getText(), horecaNumberR.getText(), phoneNumberR.getText(),
+							passwordR.getText());
+				}
+			}
+		});
+		loginButton.setOnAction(new EventHandler<ActionEvent>() {
+
+			@Override
+			public void handle(ActionEvent event) {
+				boolean valid = true;
+				if (horecaNameL.getText() == null || horecaNameL.getText().equals("")) {
+					valid = false;
+				}
+				if (passwordL.getText() == null || passwordL.getText().equals("")) {
+					valid = false;
+				}
+				if (valid) {
+					BarOwner.login(horecaNameL.getText(), passwordL.getText());
+				}
 			}
 		});
 	}
-	
+
 }

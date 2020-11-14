@@ -10,4 +10,10 @@ public class Doctor implements DoctorInterface{
 	public static void main(String[] args) {
 		
 	}
+
+	@Override
+	public void releaseInfectedLogs(List<Capsule> capsules) {
+		// TODO Auto-generated method stub
+		
+	}
 }

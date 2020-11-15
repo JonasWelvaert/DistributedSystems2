@@ -61,7 +61,7 @@ public class User {
 	}
 	
 	/**
-	 *  remove all tokens (from a specified users) that are older than the critical period.
+	 *  remove all tokens (from a specified user) that are older than the critical period.
 	 */
 	public void removeOldEntries() {
 		Set<LocalDate> dates = this.tokensIssued.keySet();

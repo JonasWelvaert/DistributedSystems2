@@ -1,11 +1,14 @@
 package registrar;
 
+import java.security.SecureRandom;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 public class User {
@@ -14,16 +17,19 @@ public class User {
 	
 	private static List<User> allUsers;
 	private static int criticalPeriod;
+	private static SecureRandom rng;
 	
-	/**
-	 * @param phoneNumber
+	/** uses the phoneNumber field to initialise a User object if phone number is not yet in use. Uses .equals to check: compares on phoneNumber only.
+	 * @param phoneNumber: phone number to register
 	 * @throws NotInitialisedException: if the User.initialiseUserSystem(int criticalPeriod) has not yet been called.
+	 * @throws UserAlreadyRegisteredException: if the phoneNumber is already in use.
 	 */
-	public User(String phoneNumber) throws NotInitialisedException{
+	public User(String phoneNumber) throws NotInitialisedException, UserAlreadyRegisteredException{
 		if(User.allUsers == null) throw new NotInitialisedException("UserSystem");
 		this.phoneNumber = phoneNumber;
 		this.tokensIssued = new HashMap<LocalDate, List<byte[]>>();
 		
+		if(User.allUsers.contains(this)) throw new UserAlreadyRegisteredException(this.phoneNumber);
 		User.allUsers.add(this);
 	}
 	
@@ -61,7 +67,8 @@ public class User {
 		Set<LocalDate> dates = this.tokensIssued.keySet();
 		List<LocalDate> toRemove = new ArrayList<>();
 		for(LocalDate ld : dates) {
-			if(LocalDate.now().getDayOfYear() - ld.getDayOfYear() > User.criticalPeriod) {
+			//if the difference in days between now & the registered date, remove all tokens associated with that date.
+			if(ChronoUnit.DAYS.between(LocalDate.now(), ld) > User.criticalPeriod) {
 				toRemove.add(ld);
 			}
 		}
@@ -76,6 +83,19 @@ public class User {
 		return this.phoneNumber;
 	}
 	
+	/** get the User object associated with a certain phoneNumber
+	 * @param phoneNumber: String
+	 * @return User if found, null if not.
+	 */
+	public static User findUser(String phoneNumber) {
+		for(User u: User.allUsers) {
+			if(u.phoneNumber.equals(phoneNumber)) {
+				return u;
+			}
+		}
+		return null;
+	}
+	
 	/** method to initialise the UserSystem as needed: create the allUsers-list & set the criticalPeriod (in days).
 	 * @param criticalPeriod: integer value that determines how long (in days) tokens are saved for. 
 	 * @return List<User> allUsers: a reference to the empty ArrayList<User> allUsers, which can be used to perform actions on all users.
@@ -83,6 +103,7 @@ public class User {
 	public static List<User> initialiseUserSystem(int criticalPeriod){
 		User.allUsers = new ArrayList<>();
 		User.criticalPeriod = criticalPeriod;
+		User.rng = new SecureRandom();
 		
 		return User.allUsers;
 	}
@@ -94,6 +115,15 @@ public class User {
 	public static List<User> getUserList() throws NotInitialisedException{
 		if(User.allUsers == null) throw new NotInitialisedException("UserSystem");
 		return User.allUsers;
+	}
+	
+	/**
+	 * @return Random rng: the static Random instance used to get the randomly generated integers for the user.random field.
+	 * @throws NotInitialisedException: if the User.initialiseUserSystem(int criticalPeriod) has not yet been called.
+	 */
+	public static Random getRNG() throws NotInitialisedException{
+		if(User.allUsers == null) throw new NotInitialisedException("UserSystem");
+		return User.rng;
 	}
 	
 	/**
@@ -131,4 +161,35 @@ public class User {
 			user.removeOldEntries();
 		});
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((phoneNumber == null) ? 0 : phoneNumber.hashCode());
+		return result;
+	}
+
+	/* (non-Javadoc)
+	 * USES ONLY THE PHONENUMBER FIELD!
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		User other = (User) obj;
+		if (phoneNumber == null) {
+			if (other.phoneNumber != null)
+				return false;
+		} else if (!phoneNumber.equals(other.phoneNumber))
+			return false;
+		return true;
+	}
+	
+	
 }

@@ -7,7 +7,9 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -33,8 +35,9 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 
 	private static final long serialVersionUID = 1L;
 	private List<CateringFacility> cateringFacilitys;
-	private List<Visitor> visitors;
+	private List<User> users;
 	private byte[] secretKey;
+	private KeyPair keyPair;
 
 	public RegistrarImplementation() throws RemoteException, NoSuchAlgorithmException {
 		try {
@@ -57,20 +60,39 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			}).create();
 			Type cfListType = new TypeToken<List<CateringFacility>>() {
 			}.getType();
-			Type visListType = new TypeToken<List<Visitor>>() {
-			}.getType();
 			cateringFacilitys = gson.fromJson(scanner.nextLine(), cfListType);
-			visitors = gson.fromJson(scanner.nextLine(), visListType);
+			
+			//KeyPair
+			keyPair = gson.fromJson(scanner.nextLine(), KeyPair.class);
+			
+			//info over de visitors
+			Type userListType = new TypeToken<List<User>>() {
+			}.getType();
+			users = gson.fromJson(scanner.nextLine(), userListType);
+			
 			// TODO: info uit file.
 
 			scanner.close();
 		} catch (FileNotFoundException e) {
+			//generate secretKey
 			KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 			keyGen.init(256);
 			secretKey = keyGen.generateKey().getEncoded();
+			//generate KeyPair for signing
+			// TODO: decide algorithm used: await email Naessens
+			
+			//initialise lists
 			cateringFacilitys = new ArrayList<>();
+			users = new ArrayList<>();
 			// TODO: lege info
-
+		} finally {
+			User.initialiseUserSystem(Values.CRITICAL_PERIOD_IN_DAYS);
+			try {
+				users = User.getUserList();
+			} catch (NotInitialisedException e) {
+				System.err.println("Startup of registrar error: this should never happen.");
+				e.printStackTrace();
+			}
 		}
 
 	}
@@ -97,6 +119,12 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 
 			}).create();
 			fw.write(gson.toJson(cateringFacilitys) + System.lineSeparator());
+			
+			//KeyPair
+			fw.write(gson.toJson(keyPair) + System.lineSeparator());
+			
+			//visitors
+			fw.write(gson.toJson(users) + System.lineSeparator());
 
 			// TODO: info wegschrijven naar file.
 
@@ -142,8 +170,16 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	}
 
 	@Override
-	public synchronized boolean enrollUser(String phoneNumber) {
-		// TODO Auto-generated method stub
+	public synchronized boolean enrollUser(String phoneNumber) throws RemoteException{
+		try {
+			User user = new User(phoneNumber);
+		} catch (NotInitialisedException e) {
+			System.err.println("arrived in illegal state with 'enrollUser(String)-method', should never throw this error.");
+			e.printStackTrace();
+			throw new RemoteException("Problem with system initialisation... -- call User.initialise(int) to fix.");
+		} catch (UserAlreadyRegisteredException uare) {
+			return false;
+		}
 		return true;
 	}
 
@@ -163,6 +199,11 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	public synchronized List<String> getUnacknowledgedPhoneNumbers() {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public synchronized PublicKey getPublicKey() throws RemoteException {
+		return keyPair.getPublic();
 	}
 
 }

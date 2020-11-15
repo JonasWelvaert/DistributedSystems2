@@ -1,5 +1,8 @@
 package registrar;
 
+import java.security.*;
+import javax.security.*;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.time.LocalDate;
@@ -22,11 +25,13 @@ public interface RegistrarInterface extends Remote {
 	 * functie die user in het systeem opneemt: eenmalig op te roepen
 	 * 
 	 * @param telefoonNummer
-	 * @return success = null; failure: Exception with report
+	 * @return success = true, false if already registered
 	 */
-	public boolean enrollUser(String phoneNumber) throws RemoteException, UserAlreadyRegisteredException;
+	public boolean enrollUser(String phoneNumber) throws RemoteException;
 
-	public Stack<byte[]> retrieveTokens(String phoneNumber) throws RemoteException;
+	public PublicKey getPublicKey() throws RemoteException;
+	
+	public Stack<byte[]> retrieveTokens(String phoneNumber) throws RemoteException, UserNotRegisteredException;
 
 	public void addUnacknowledgedLogs(List<byte[]> unacknowledgedTokens) throws RemoteException;
 

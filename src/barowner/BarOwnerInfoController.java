@@ -2,6 +2,7 @@ package barowner;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
 import java.util.Arrays;
 
 import javafx.event.ActionEvent;
@@ -40,9 +41,9 @@ public class BarOwnerInfoController {
 	@FXML
 	private void initialize() {
 		horecaName.setText(BarOwner.getHorecaName());
-		// TODO veranderen van qr tekst
-		String[] qrCodeText = {"R_i", BarOwner.getHorecaNumber(), "H(R_i,nym_(CF,day_i))"};
-		ByteArrayOutputStream out = QRCode.from(Arrays.toString(qrCodeText)).to(ImageType.GIF).withSize(200, 200).stream();
+		String[] qrCodeText = BarOwner.getQRCode(LocalDate.now());
+		ByteArrayOutputStream out = QRCode.from(Arrays.toString(qrCodeText)).to(ImageType.GIF).withSize(200, 200)
+				.stream();
 		ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
 		Image image = new Image(in);
 		qrCode.setImage(image);
@@ -51,7 +52,7 @@ public class BarOwnerInfoController {
 			public void handle(ActionEvent event) {
 				Clipboard clipboard = Clipboard.getSystemClipboard();
 				ClipboardContent content = new ClipboardContent();
-				content.putString(Arrays.toString(qrCodeText)); // TODO: veranderen
+				content.putString(Arrays.toString(qrCodeText));
 				clipboard.setContent(content);
 			}
 		});

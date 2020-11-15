@@ -2,21 +2,19 @@ package registrar;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.Base64;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 public class CateringFacility {
-	private Map<LocalDate, SecretKey> secretKeys;
+	private Map<LocalDate, byte[]> secretKeys;
 	private String horecaName;
 	private String horecaNumber;
 	private String address;
@@ -30,21 +28,51 @@ public class CateringFacility {
 		this.password = password;
 	}
 
-	public byte[] getPseudonym(LocalDate date, SecretKey s) throws NoSuchAlgorithmException, InvalidKeySpecException {
-		SecretKey sCF;
+	private byte[] getSecretKey(LocalDate date, byte[] s) {
 		if (secretKeys.containsKey(date)) {
-			sCF = secretKeys.get(date);
+			return secretKeys.get(date);
 		} else {
-			String input = Base64.getEncoder().encodeToString(s.getEncoded()) + horecaNumber + date.toString();
-			SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
-			PBEKeySpec keySpec = new PBEKeySpec(input.toCharArray());
-			sCF = keyFactory.generateSecret(keySpec);
-			secretKeys.put(date, sCF);
+			SecretKey sCF = null;
+			try {
+				byte[] salt = new byte[32];
+				new SecureRandom().nextBytes(salt);
+				String input = Base64.getEncoder().encodeToString(s) + horecaNumber + date.toString();
+				SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256");
+				PBEKeySpec keySpec = new PBEKeySpec(input.toCharArray(), salt, 1024, 32 * 8);
+
+				sCF = keyFactory.generateSecret(keySpec);
+			} catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
+				e.printStackTrace();
+			}
+			secretKeys.put(date, sCF.getEncoded());
+			return sCF.getEncoded();
 		}
-		MessageDigest md = MessageDigest.getInstance("SHA-256");
-		String input = Base64.getEncoder().encodeToString(s.getEncoded()) + address + date.toString();
-		byte[] pseudonym = md.digest(input.getBytes());
+	}
+
+	public byte[] getPseudonym(LocalDate date, byte[] s) {
+		byte[] pseudonym = null;
+		try {
+			byte[] sCF = getSecretKey(date, s);
+			MessageDigest md;
+			md = MessageDigest.getInstance("SHA-256");
+			String input = Base64.getEncoder().encodeToString(sCF) + address + date.toString();
+			pseudonym = md.digest(input.getBytes());
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
 		return pseudonym;
+	}
+
+	public boolean hasHorecaNumber(String horecaNumber) {
+		return this.horecaNumber.equals(horecaNumber);
+	}
+
+	public boolean hasHorecaName(String horecaName) {
+		return this.horecaName.equals(horecaName);
+	}
+
+	public boolean isCorrectPassword(String password) {
+		return this.password.equals(password);
 	}
 
 }

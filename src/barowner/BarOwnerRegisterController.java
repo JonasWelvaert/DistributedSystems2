@@ -45,8 +45,11 @@ public class BarOwnerRegisterController {
 					valid = false;
 				}
 				if (valid) {
-					BarOwner.register(horecaNameR.getText(), horecaNumberR.getText(), addressR.getText(),
-							passwordR.getText());
+					boolean isRegistered = BarOwner.register(horecaNameR.getText(), horecaNumberR.getText(),
+							addressR.getText(), passwordR.getText());
+					if (isRegistered) {
+						BarOwner.openInfoScene();
+					}
 				}
 			}
 		});
@@ -62,7 +65,10 @@ public class BarOwnerRegisterController {
 					valid = false;
 				}
 				if (valid) {
-					BarOwner.login(horecaNameL.getText(), passwordL.getText());
+					boolean isLoggedIn = BarOwner.login(horecaNameL.getText(), passwordL.getText());
+					if (isLoggedIn) {
+						BarOwner.openInfoScene();
+					}
 				}
 			}
 		});

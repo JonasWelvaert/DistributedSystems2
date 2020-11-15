@@ -24,7 +24,7 @@ public interface RegistrarInterface extends Remote {
 	 * @param telefoonNummer
 	 * @return success = null; failure: Exception with report
 	 */
-	public Exception enrollUser(String phoneNumber) throws RemoteException;
+	public boolean enrollUser(String phoneNumber) throws RemoteException, UserAlreadyRegisteredException;
 
 	public Stack<byte[]> retrieveTokens(String phoneNumber) throws RemoteException;
 

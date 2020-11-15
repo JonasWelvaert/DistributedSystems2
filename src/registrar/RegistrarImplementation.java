@@ -27,11 +27,13 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import values.Values;
+import visitor.Visitor;
 
 public class RegistrarImplementation extends UnicastRemoteObject implements RegistrarInterface {
 
 	private static final long serialVersionUID = 1L;
 	private List<CateringFacility> cateringFacilitys;
+	private List<Visitor> visitors;
 	private byte[] secretKey;
 
 	public RegistrarImplementation() throws RemoteException, NoSuchAlgorithmException {
@@ -55,7 +57,10 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			}).create();
 			Type cfListType = new TypeToken<List<CateringFacility>>() {
 			}.getType();
+			Type visListType = new TypeToken<List<Visitor>>() {
+			}.getType();
 			cateringFacilitys = gson.fromJson(scanner.nextLine(), cfListType);
+			visitors = gson.fromJson(scanner.nextLine(), visListType);
 			// TODO: info uit file.
 
 			scanner.close();
@@ -73,6 +78,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	private void updateFile() {
 		try {
 			File file = new File(Values.FILE_DIR + "registrar.csv");
+			file.createNewFile();
 			FileWriter fw;
 			fw = new FileWriter(file);
 
@@ -97,6 +103,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			fw.flush();
 			fw.close();
 		} catch (IOException e) {
+			System.err.println("error in updateFile()-method.");
 			e.printStackTrace();
 		}
 	}
@@ -135,9 +142,9 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	}
 
 	@Override
-	public synchronized Exception enrollUser(String phoneNumber) {
+	public synchronized boolean enrollUser(String phoneNumber) {
 		// TODO Auto-generated method stub
-		return null;
+		return true;
 	}
 
 	@Override

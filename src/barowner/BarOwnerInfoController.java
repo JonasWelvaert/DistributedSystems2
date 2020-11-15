@@ -59,6 +59,5 @@ public class BarOwnerInfoController {
 
 		// TODO change this figure.
 		proofOfRegistration.getGraphicsContext2D().fillOval(10, 60, 30, 30);
-
 	}
 }

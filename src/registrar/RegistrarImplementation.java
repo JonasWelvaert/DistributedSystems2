@@ -7,9 +7,15 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -62,8 +68,20 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			}.getType();
 			cateringFacilitys = gson.fromJson(scanner.nextLine(), cfListType);
 			
-			//KeyPair
-			keyPair = gson.fromJson(scanner.nextLine(), KeyPair.class);
+			//KeyPair	
+			try {
+				KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+				PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
+				PrivateKey privkey = keyFactory.generatePrivate(privSpec);
+				
+				X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
+				PublicKey pubkey = keyFactory.generatePublic(pubSpec);
+				
+				keyPair = new KeyPair(pubkey, privkey);
+			} catch (InvalidKeySpecException e) {
+				System.err.println("invalid keyspec for keyPair reading.");
+				e.printStackTrace();
+			}
 			
 			//info over de visitors
 			Type userListType = new TypeToken<List<User>>() {
@@ -79,7 +97,8 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			keyGen.init(256);
 			secretKey = keyGen.generateKey().getEncoded();
 			//generate KeyPair for signing
-			// TODO: decide algorithm used: await email Naessens
+			KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
+			keyPair = kpg.generateKeyPair();
 			
 			//initialise lists
 			cateringFacilitys = new ArrayList<>();
@@ -87,12 +106,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			// TODO: lege info
 		} finally {
 			User.initialiseUserSystem(Values.CRITICAL_PERIOD_IN_DAYS);
-			try {
-				users = User.getUserList();
-			} catch (NotInitialisedException e) {
-				System.err.println("Startup of registrar error: this should never happen.");
-				e.printStackTrace();
-			}
+			User.setAllUsersList(users);
 		}
 
 	}
@@ -121,7 +135,8 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			fw.write(gson.toJson(cateringFacilitys) + System.lineSeparator());
 			
 			//KeyPair
-			fw.write(gson.toJson(keyPair) + System.lineSeparator());
+			fw.write(Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()) + System.lineSeparator());
+			fw.write(Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded())  + System.lineSeparator());
 			
 			//visitors
 			fw.write(gson.toJson(users) + System.lineSeparator());
@@ -173,11 +188,13 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	public synchronized boolean enrollUser(String phoneNumber) throws RemoteException{
 		try {
 			User user = new User(phoneNumber);
+			updateFile();
 		} catch (NotInitialisedException e) {
 			System.err.println("arrived in illegal state with 'enrollUser(String)-method', should never throw this error.");
 			e.printStackTrace();
 			throw new RemoteException("Problem with system initialisation... -- call User.initialise(int) to fix.");
 		} catch (UserAlreadyRegisteredException uare) {
+			System.out.println("User already registered...");
 			return false;
 		}
 		return true;

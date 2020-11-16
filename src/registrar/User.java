@@ -161,6 +161,10 @@ public class User {
 			user.removeOldEntries();
 		});
 	}
+	
+	public static void setAllUsersList(List<User> users) {
+		User.allUsers = users;
+	}
 
 	@Override
 	public int hashCode() {

@@ -84,5 +84,14 @@ public class Token implements Serializable {
 		return true;
 	}
 	
-	
+	public void printTokenBitRepresentation() {
+		System.out.println("token length: " + 8*this.token.length + " bits.");
+		for(int i=0; i<this.token.length; i++) {
+			System.out.print(String.format("%8s", Integer.toBinaryString(this.token[i] & 0xff)).replace(" ", "0"));
+			if(i != (this.token.length - 1)) {
+				System.out.print("|");
+			}
+		}
+		System.out.println();
+	}
 }

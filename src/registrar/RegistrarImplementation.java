@@ -13,6 +13,7 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -34,6 +35,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import sharedclasses.Token;
 import values.Values;
 import visitor.Visitor;
 
@@ -70,7 +72,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			
 			//KeyPair	
 			try {
-				KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+				KeyFactory keyFactory = KeyFactory.getInstance("DSA");
 				PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
 				PrivateKey privkey = keyFactory.generatePrivate(privSpec);
 				
@@ -88,6 +90,9 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			}.getType();
 			users = gson.fromJson(scanner.nextLine(), userListType);
 			User.initialiseUserSystem(Values.CRITICAL_PERIOD_IN_DAYS, users);
+			User.getUserList().forEach(user -> {
+				System.out.println(user);
+			});
 			// TODO: info uit file.
 
 			scanner.close();
@@ -97,7 +102,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			keyGen.init(256);
 			secretKey = keyGen.generateKey().getEncoded();
 			//generate KeyPair for signing
-			KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
+			KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
 			keyPair = kpg.generateKeyPair();
 			
 			//initialise lists
@@ -198,14 +203,28 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	}
 
 	@Override
-	public synchronized Stack<byte[]> retrieveTokens(String phoneNumber) {
+	public synchronized List<Token> retrieveTokens(String phoneNumber) throws TokensAlreadyIssuedException, UserNotRegisteredException {
 		User user = User.findUser(phoneNumber);
-		// TODO stubbed method
-		return null;
+		if(user == null) {
+			throw new UserNotRegisteredException(phoneNumber);
+		}
+		List<Token> tokens= new ArrayList<Token>(48);
+		SecureRandom rng = User.getRNG();
+		if(rng == null) {
+			System.out.println("System not initialised correctly -- returning null tokens.");
+		}
+		for(int i=0; i<48; i++) {
+			tokens.add(Token.createToken(this.keyPair.getPrivate(), rng));
+		}
+		//nu hebben we een lijst tokens aangemaakt & ondertekend. Deze moeten geregistreerd worden bij de user.
+		if(!User.addTokens(user, tokens)) {
+			System.out.println("Something went wrong finding the user in the User.addTokens-method. Called by retrieveTokens RMI method.");
+		}
+		return tokens;
 	}
 
 	@Override
-	public synchronized void addUnacknowledgedLogs(List<byte[]> unacknowledgedTokens) {
+	public synchronized void addUnacknowledgedLogs(List<Token> unacknowledgedTokens) {
 		// TODO Auto-generated method stub
 
 	}

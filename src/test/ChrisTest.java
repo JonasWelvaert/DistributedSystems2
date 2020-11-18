@@ -12,12 +12,14 @@ import javax.crypto.NoSuchPaddingException;
 import javax.security.*;
 import javax.xml.bind.DatatypeConverter;
 
+import sharedclasses.Token;
+
 public class ChrisTest {
 
 	public static void main(String[] args) throws NoSuchAlgorithmException {
 		//intToByteArrayTest();
 		SecureRandom sr = new SecureRandom();
-		byte[] unsignedToken = ChrisTest.generateUnsigned32ByteToken(sr);
+		createTokenTest(sr);
 	}
 	
 	private static void intToByteArrayTest() {
@@ -65,6 +67,47 @@ public class ChrisTest {
 		//geen vreemde tekens, ook best handig.
 		System.out.println(DatatypeConverter.printHexBinary(preToken));
 		return preToken;
+	}
+	
+	public static void tokenMethodTest(SecureRandom sr) {
+		try {
+			byte[] unsignedToken = ChrisTest.generateUnsigned32ByteToken(sr);
+			
+			KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
+			KeyPair keyPair = kpg.generateKeyPair();
+			
+			Signature sig = Signature.getInstance("SHA256withDSA");
+			sig.initSign(keyPair.getPrivate());
+			sig.update(unsignedToken);
+			byte[] signature = sig.sign();
+			
+			sig = Signature.getInstance("SHA256withDSA");
+			sig.initVerify(keyPair.getPublic());
+			sig.update(unsignedToken);
+			System.out.println(sig.verify(signature));
+			
+			Token token = new Token(unsignedToken, signature);
+			
+			System.out.println("checking signature: "+token.checkSignature(keyPair.getPublic()));
+			System.out.println("checking correct date: " + token.checkIssuedDate(LocalDate.now()));
+			System.out.println("checking false date: " + token.checkIssuedDate(LocalDate.of(2019, 1, 1)));
+		} catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void createTokenTest(SecureRandom sr) {
+		try {
+			KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
+			KeyPair keyPair = kpg.generateKeyPair();
+			
+			Token token = Token.createToken(keyPair.getPrivate(), sr);
+			System.out.println("checking signature: "+token.checkSignature(keyPair.getPublic()));
+			System.out.println("checking correct date: " + token.checkIssuedDate(LocalDate.now()));
+			System.out.println("checking false date: " + token.checkIssuedDate(LocalDate.of(2019, 1, 1)));
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

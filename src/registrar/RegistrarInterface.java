@@ -3,6 +3,8 @@ package registrar;
 import java.security.*;
 import javax.security.*;
 
+import sharedclasses.Token;
+
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.time.LocalDate;
@@ -35,9 +37,15 @@ public interface RegistrarInterface extends Remote {
 	 */
 	public PublicKey getPublicKey() throws RemoteException;
 	
-	public Stack<byte[]> retrieveTokens(String phoneNumber) throws RemoteException, UserNotRegisteredException;
+	/** get a list of Token objects, signed by the registrar. Also, for users, this should be put on a stack/in a queue to make sure they aren't used already...
+	 * @param phoneNumber
+	 * @return
+	 * @throws RemoteException
+	 * @throws UserNotRegisteredException
+	 */
+	public List<Token> retrieveTokens(String phoneNumber) throws RemoteException, UserNotRegisteredException, TokensAlreadyIssuedException;
 
-	public void addUnacknowledgedLogs(List<byte[]> unacknowledgedTokens) throws RemoteException;
+	public void addUnacknowledgedLogs(List<Token> unacknowledgedTokens) throws RemoteException;
 
 	public List<String> getUnacknowledgedPhoneNumbers() throws RemoteException;
 

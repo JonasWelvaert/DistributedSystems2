@@ -1,5 +1,6 @@
 package registrar;
 
+import java.security.PrivateKey;
 import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -11,9 +12,11 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import sharedclasses.Token;
+
 public class User {
 	private String phoneNumber;
-	private Map<LocalDate, List<byte[]>> tokensIssued;
+	private Map<LocalDate, List<Token>> tokensIssued;
 	
 	private static List<User> allUsers;
 	private static int criticalPeriod;
@@ -27,32 +30,33 @@ public class User {
 	public User(String phoneNumber) throws NotInitialisedException, UserAlreadyRegisteredException{
 		if(User.allUsers == null) throw new NotInitialisedException("UserSystem");
 		this.phoneNumber = phoneNumber;
-		this.tokensIssued = new HashMap<LocalDate, List<byte[]>>();
+		this.tokensIssued = new HashMap<LocalDate, List<Token>>();
 		
 		if(User.allUsers.contains(this)) throw new UserAlreadyRegisteredException(this.phoneNumber);
 		User.allUsers.add(this);
 	}
 	
-	/** register a list of tokens to a specific user for a specific date.
-	 * @param today: date for which the tokens are to be registered
+	/** register a list of tokens to a specific user for today.
 	 * @param tokens: (array)list of tokens
-	 * @return List<byte[]> if key was already associated with an item, returns null if not.
 	 */
-	public List<byte[]> addTokens(LocalDate today, List<byte[]> tokens) {
-		List<byte[]> result = tokensIssued.put(today, tokens);
-		return result;
+	public void addTokens(List<Token> tokens) throws TokensAlreadyIssuedException{
+		if(tokensIssued.containsKey(LocalDate.now())) {
+			throw new TokensAlreadyIssuedException(this.phoneNumber);
+		} else {
+			tokensIssued.put(LocalDate.now(), tokens);
+		}
 	}
 	
 	/** checks whether or not a certain token was issued to this user
 	 * @param token: byte[]: the token against which to compare
 	 * @return if no match is found, return null. Else, return the LocalDate object matching the day the token was issued.
 	 */
-	public LocalDate checkToken(byte[] token) {
+	public LocalDate checkToken(Token token) {
 		Set<LocalDate> dates = this.tokensIssued.keySet();
 		for(LocalDate ld: dates) {
-			List<byte[]> tokensOnDayLD = this.tokensIssued.get(ld);
-			for(byte[] currentToken: tokensOnDayLD) {
-				if(Arrays.equals(token, currentToken)) {
+			List<Token> tokensOnDayLD = this.tokensIssued.get(ld);
+			for(Token currentToken: tokensOnDayLD) {
+				if(token.equals(currentToken)) {
 					return ld;
 				}
 			}
@@ -109,20 +113,17 @@ public class User {
 	}
 	
 	/**
-	 * @return
-	 * @throws NotInitialisedException: if the User.initialiseUserSystem(int criticalPeriod) has not yet been called.
+	 * @return allUsers, or null if not initialized.
 	 */
-	public static List<User> getUserList() throws NotInitialisedException{
-		if(User.allUsers == null) throw new NotInitialisedException("UserSystem");
+	public static List<User> getUserList() {
 		return User.allUsers;
 	}
 	
 	/**
-	 * @return Random rng: the static Random instance used to get the randomly generated integers for the user.random field.
-	 * @throws NotInitialisedException: if the User.initialiseUserSystem(int criticalPeriod) has not yet been called.
+	 * @return Random rng: the static SecureRandom-instance, used to make tokens.
 	 */
-	public static Random getRNG() throws NotInitialisedException{
-		if(User.allUsers == null) throw new NotInitialisedException("UserSystem");
+	public static SecureRandom getRNG() {
+		if(User.allUsers == null) return null;
 		return User.rng;
 	}
 	
@@ -135,19 +136,15 @@ public class User {
 		return User.criticalPeriod;
 	}
 	
-	/** register a list of tokens for a specific user for use on a specific date.
+	/** register a list of tokens for a specific user for use today [LocalDate.now()].
 	 * @param user: user for whom to register the tokens
-	 * @param ld: date for which the tokens are issued
 	 * @param tokens: (array)list of the issued tokens
-	 * @return true if successful, false if user not enrolled or ld already had tokens associated with it.
+	 * @return true if successful, false if user not enrolled.
+	 * @throws TokensAlreadyIssuedException: if tokens were already issued to this user today.
 	 */
-	public static boolean addTokens(User user, LocalDate ld, List<byte[]> tokens){
+	public static boolean addTokens(User user, List<Token> tokens) throws TokensAlreadyIssuedException{
 		if(!User.allUsers.contains(user)) return false;
-		if(user.tokensIssued.containsKey(ld)) {
-			System.out.println("User " + user.phoneNumber + "already had tokens for this day. Error in function addTokens(User, LocalDate, List<byte[]>)");
-			return false;
-		}
-		user.addTokens(ld, tokens);
+		user.addTokens(tokens);
 		return true;
 	}
 	
@@ -193,21 +190,10 @@ public class User {
 			return false;
 		return true;
 	}
-	
-	/** Using the current date & random information from the SecureRandom User.rng, create a 32byte (256bit) token.
-	 * @return byte[] unsigned token.
-	 */
-	public static byte[] createUnsignedToken() {
-		byte[] ld = LocalDate.now().toString().getBytes();
-		byte[] random = new byte[22];
-		rng.nextBytes(random);
-		byte[] preToken = new byte[32];
-		for(int i=0; i<10; i++) {
-			preToken[i] = ld[i];
-		}
-		for(int i=10; i<32; i++) {
-			preToken[i] = random[i-10];
-		}
-		return preToken;
+
+	@Override
+	public String toString() {
+		return "User [phoneNumber=" + phoneNumber + ", tokensIssued=" + tokensIssued + "]";
 	}
+	
 }

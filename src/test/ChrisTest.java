@@ -20,15 +20,6 @@ public class ChrisTest {
 		byte[] unsignedToken = ChrisTest.generateUnsigned32ByteToken(sr);
 	}
 	
-	private static byte[] intToBytes(final int data) {
-	    return new byte[] {
-	        (byte)((data >> 24) & 0xff),
-	        (byte)((data >> 16) & 0xff),
-	        (byte)((data >> 8) & 0xff),
-	        (byte)((data >> 0) & 0xff),
-	    };
-	}
-	
 	private static void intToByteArrayTest() {
 		SecureRandom sr;
 		try {

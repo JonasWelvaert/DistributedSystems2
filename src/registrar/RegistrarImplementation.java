@@ -87,7 +87,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			Type userListType = new TypeToken<List<User>>() {
 			}.getType();
 			users = gson.fromJson(scanner.nextLine(), userListType);
-			
+			User.initialiseUserSystem(Values.CRITICAL_PERIOD_IN_DAYS, users);
 			// TODO: info uit file.
 
 			scanner.close();
@@ -103,12 +103,9 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			//initialise lists
 			cateringFacilitys = new ArrayList<>();
 			users = new ArrayList<>();
+			User.initialiseUserSystem(Values.CRITICAL_PERIOD_IN_DAYS, users);
 			// TODO: lege info
-		} finally {
-			User.initialiseUserSystem(Values.CRITICAL_PERIOD_IN_DAYS);
-			User.setAllUsersList(users);
 		}
-
 	}
 
 	private void updateFile() {
@@ -202,7 +199,8 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 
 	@Override
 	public synchronized Stack<byte[]> retrieveTokens(String phoneNumber) {
-		// TODO Auto-generated method stub
+		User user = User.findUser(phoneNumber);
+		// TODO stubbed method
 		return null;
 	}
 
@@ -222,13 +220,4 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	public synchronized PublicKey getPublicKey() throws RemoteException {
 		return keyPair.getPublic();
 	}
-	
-	/** uses the User.SecureRandom to generate enough random information to generate a token.
-	 * @return 256bit token
-	 */
-	public byte[] generate256BitToken() {
-		byte[] token = new byte[32];
-		return token;
-	}
-
 }

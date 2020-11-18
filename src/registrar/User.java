@@ -100,8 +100,8 @@ public class User {
 	 * @param criticalPeriod: integer value that determines how long (in days) tokens are saved for. 
 	 * @return List<User> allUsers: a reference to the empty ArrayList<User> allUsers, which can be used to perform actions on all users.
 	 */
-	public static List<User> initialiseUserSystem(int criticalPeriod){
-		User.allUsers = new ArrayList<>();
+	public static List<User> initialiseUserSystem(int criticalPeriod, List<User> fromDatabase){
+		User.allUsers = fromDatabase;
 		User.criticalPeriod = criticalPeriod;
 		User.rng = new SecureRandom();
 		
@@ -194,5 +194,20 @@ public class User {
 		return true;
 	}
 	
-	
+	/** Using the current date & random information from the SecureRandom User.rng, create a 32byte (256bit) token.
+	 * @return byte[] unsigned token.
+	 */
+	public static byte[] createUnsignedToken() {
+		byte[] ld = LocalDate.now().toString().getBytes();
+		byte[] random = new byte[22];
+		rng.nextBytes(random);
+		byte[] preToken = new byte[32];
+		for(int i=0; i<10; i++) {
+			preToken[i] = ld[i];
+		}
+		for(int i=10; i<32; i++) {
+			preToken[i] = random[i-10];
+		}
+		return preToken;
+	}
 }

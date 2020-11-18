@@ -34,7 +34,7 @@ public class Visitor extends Application {
 	private static Stage primaryStage;
 
 	public static void main(String[] args) {
-		String number = "0472/07 77 76";
+		String number = "0472/07 77 74";
 		if(enrollUser(number)) {
 			System.out.println("Register: Success!");
 		} else {
@@ -43,6 +43,7 @@ public class Visitor extends Application {
 		List<Token> todaysTokens = getTokenAllocation(number);
 		if(todaysTokens == null) {
 			System.out.println("gettingTokens: Failure.");
+			System.exit(0);
 		} else {
 			System.out.println("gettingTokens: Success.");
 			allTokens.put(LocalDate.now(), todaysTokens);

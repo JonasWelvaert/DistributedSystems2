@@ -220,6 +220,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 		if(!User.addTokens(user, tokens)) {
 			System.out.println("Something went wrong finding the user in the User.addTokens-method. Called by retrieveTokens RMI method.");
 		}
+		updateFile();
 		return tokens;
 	}
 

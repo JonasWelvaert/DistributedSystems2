@@ -29,6 +29,10 @@ public interface RegistrarInterface extends Remote {
 	 */
 	public boolean enrollUser(String phoneNumber) throws RemoteException;
 
+	/**
+	 * @return PublicKey pubkey: wordt gebruikt voor controle van signed tokens
+	 * @throws RemoteException
+	 */
 	public PublicKey getPublicKey() throws RemoteException;
 	
 	public Stack<byte[]> retrieveTokens(String phoneNumber) throws RemoteException, UserNotRegisteredException;

@@ -70,7 +70,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			
 			//KeyPair	
 			try {
-				KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+				KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 				PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
 				PrivateKey privkey = keyFactory.generatePrivate(privSpec);
 				
@@ -97,7 +97,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			keyGen.init(256);
 			secretKey = keyGen.generateKey().getEncoded();
 			//generate KeyPair for signing
-			KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
+			KeyPairGenerator kpg = KeyPairGenerator.getInstance("RSA");
 			keyPair = kpg.generateKeyPair();
 			
 			//initialise lists
@@ -221,6 +221,14 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	@Override
 	public synchronized PublicKey getPublicKey() throws RemoteException {
 		return keyPair.getPublic();
+	}
+	
+	/** uses the User.SecureRandom to generate enough random information to generate a token.
+	 * @return 256bit token
+	 */
+	public byte[] generate256BitToken() {
+		byte[] token = new byte[32];
+		return token;
 	}
 
 }

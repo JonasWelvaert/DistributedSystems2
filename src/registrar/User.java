@@ -140,15 +140,14 @@ public class User {
 	 * @param ld: date for which the tokens are issued
 	 * @param tokens: (array)list of the issued tokens
 	 * @return true if successful, false if user not enrolled or ld already had tokens associated with it.
-	 * @throws NotInitialisedException: if the User.initialiseUserSystem(int criticalPeriod) has not yet been called.
 	 */
-	public static boolean addTokens(User user, LocalDate ld, List<byte[]> tokens) throws NotInitialisedException{
-		if(User.allUsers == null) throw new NotInitialisedException("UserSystem");
+	public static boolean addTokens(User user, LocalDate ld, List<byte[]> tokens){
 		if(!User.allUsers.contains(user)) return false;
-		if(user.addTokens(ld, tokens) != null) {
+		if(user.tokensIssued.containsKey(ld)) {
 			System.out.println("User " + user.phoneNumber + "already had tokens for this day. Error in function addTokens(User, LocalDate, List<byte[]>)");
 			return false;
 		}
+		user.addTokens(ld, tokens);
 		return true;
 	}
 	

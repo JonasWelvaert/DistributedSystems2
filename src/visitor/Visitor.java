@@ -34,42 +34,7 @@ public class Visitor extends Application {
 	private static Stage primaryStage;
 
 	public static void main(String[] args) {
-		String number = "0472/07 77 74";
-		if(enrollUser(number)) {
-			System.out.println("Register: Success!");
-		} else {
-			System.out.println("Register: Already registered!");
-		}
-		List<Token> todaysTokens = getTokenAllocation(number);
-		if(todaysTokens == null) {
-			System.out.println("gettingTokens: Failure.");
-			System.exit(0);
-		} else {
-			System.out.println("gettingTokens: Success.");
-			allTokens.put(LocalDate.now(), todaysTokens);
-			Stack tokens = new Stack();
-			tokens.addAll(todaysTokens);
-			tokenCache.put(LocalDate.now(), tokens);
-		}
-		List<Token> duplicateTokens = getTokenAllocation(number);
-		if(duplicateTokens != null) {
-			System.out.println("uh oh...");
-		} else {
-			System.out.println("Second Batch not received :)");
-		}
-		int count = 0;
-		try {
-			while(count < 55) {
-				tokenCache.get(LocalDate.now()).pop();
-				count++;
-			}
-		} catch (EmptyStackException ese) {
-			System.out.println("expected amount: 48");
-			System.out.println("amount of tokens received today: " + count);
-			System.out.println(allTokens.get(LocalDate.now()).size());
-		} finally {
-			System.exit(0);
-		}
+		
 	}
 
 	@Override
@@ -118,9 +83,56 @@ public class Visitor extends Application {
 				return null;
 			}
 		} catch (RemoteException | NotBoundException e) {
-			System.err.println("error fetching public key from registrar");
+			System.err.println("error connecting to the registrar");
 			e.printStackTrace();
 			return null;
+		}
+	}
+	
+	public static void register(String name, String phoneNumber, String password) {
+		if(enrollUser(phoneNumber)) {
+			//if this is succesfull, it's a newly registered account and a .csv should be constructed
+		} else {
+			//in this case we just need to make an alert to check server availability or this number might already be registered.
+		}
+	}
+	
+	private static void noGuiTest() {
+		String number = "0472/07 77 74";
+		if(enrollUser(number)) {
+			System.out.println("Register: Success!");
+		} else {
+			System.out.println("Register: Already registered!");
+		}
+		List<Token> todaysTokens = getTokenAllocation(number);
+		if(todaysTokens == null) {
+			System.out.println("gettingTokens: Failure.");
+			System.exit(0);
+		} else {
+			System.out.println("gettingTokens: Success.");
+			allTokens.put(LocalDate.now(), todaysTokens);
+			Stack tokens = new Stack();
+			tokens.addAll(todaysTokens);
+			tokenCache.put(LocalDate.now(), tokens);
+		}
+		List<Token> duplicateTokens = getTokenAllocation(number);
+		if(duplicateTokens != null) {
+			System.out.println("uh oh...");
+		} else {
+			System.out.println("Second Batch not received :)");
+		}
+		int count = 0;
+		try {
+			while(count < 55) {
+				tokenCache.get(LocalDate.now()).pop();
+				count++;
+			}
+		} catch (EmptyStackException ese) {
+			System.out.println("expected amount: 48");
+			System.out.println("amount of tokens received today: " + count);
+			System.out.println(allTokens.get(LocalDate.now()).size());
+		} finally {
+			System.exit(0);
 		}
 	}
 }

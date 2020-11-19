@@ -16,6 +16,10 @@ public class Token implements Serializable {
 		this.signature = signature;
 	}
 	
+	/** use the PublicKey of the Registrar to check whether it was a validly issued token.
+	 * @param pubkey
+	 * @return
+	 */
 	public boolean checkSignature(PublicKey pubkey) {
 		try {
 			Signature sig = Signature.getInstance("SHA256withDSA");
@@ -29,6 +33,10 @@ public class Token implements Serializable {
 		}
 	}
 	
+	/** Check whether or not a Token was issued on a certain date. No RMI necessary. To be called by mixing proxy
+	 * @param toCheck
+	 * @return
+	 */
 	public boolean checkIssuedDate(LocalDate toCheck) {
 		String toParse = new String(this.token);
 		int year = Integer.parseInt(toParse.substring(0, 4));
@@ -39,6 +47,12 @@ public class Token implements Serializable {
 		return issuedAt.equals(toCheck);
 	}
 	
+	/** create a signed token, 32 bytes of information ( = 256 bits = 1.15*10^77 possibilities), with 22 bytes randomised and 10 bytes day-bound.
+	 * 	This leaves 2^(22*8) possibilities for each day = 9.6*10^55 possibilities.
+	 * @param privkey: private key of the registrar
+	 * @param sr: SecureRandom as created in the User-class (registrar-side)
+	 * @return
+	 */
 	public static Token createToken(PrivateKey privkey, SecureRandom sr) {
 		try {
 			byte[] ld = LocalDate.now().toString().getBytes();
@@ -84,6 +98,9 @@ public class Token implements Serializable {
 		return true;
 	}
 	
+	/** Print a bit-representation of a token to the screen. Take note that since LocalDate is used first, the first part of each day is the same.
+	 * 
+	 */
 	public void printTokenBitRepresentation() {
 		System.out.println("token length: " + 8*this.token.length + " bits.");
 		for(int i=0; i<this.token.length; i++) {

@@ -4,16 +4,21 @@ import java.io.Serializable;
 import java.security.*;
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.security.*;
 
 public class Token implements Serializable {
 	private byte[] token;
 	private byte[] signature;
+	//this is for visitors, servers will check their local db!
+	private boolean used;
 	
 	public Token(byte[] token, byte[] signature) {
 		this.token = token;
 		this.signature = signature;
+		this.used = false;
 	}
 	
 	/** use the PublicKey of the Registrar to check whether it was a validly issued token.
@@ -74,6 +79,22 @@ public class Token implements Serializable {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	/** gets the first unused token in the list for use (this will mark the returned token as used)
+	 * @param tokenList
+	 * @return
+	 */
+	public static Token getFirstUnused(List<Token> tokenList) {
+		Iterator<Token> it = tokenList.iterator();
+		Token token;
+		while(it.hasNext()) {
+			token = it.next();
+			if(!token.used) {
+				return token;
+			}
+		}
+		return null;
 	}
 
 	@Override

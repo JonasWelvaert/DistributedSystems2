@@ -1,5 +1,10 @@
 package visitor;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -10,8 +15,17 @@ import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.Stack;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.TypeAdapter;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+
+import barowner.BarOwner;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -19,22 +33,23 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
+import registrar.CateringFacility;
 import registrar.RegistrarInterface;
 import registrar.TokensAlreadyIssuedException;
+import registrar.UserAlreadyRegisteredException;
 import registrar.UserNotRegisteredException;
 import sharedclasses.Token;
 import values.Values;
 
 public class Visitor extends Application {
-	private static String name;
-	private static String phoneNumber;
-	private static Map<LocalDate, List<Token>> allTokens = new HashMap<LocalDate, List<Token>>();
-	private static Map<LocalDate, Stack<Token>> tokenCache = new HashMap<LocalDate, Stack<Token>>();
+	private static String fileName;
+	private static visitor.User user;
+	private static Map<LocalDate, List<Token>> issuedTokens = new HashMap<LocalDate, List<Token>>();
 
 	private static Stage primaryStage;
 
 	public static void main(String[] args) {
-		
+		launch(args);
 	}
 
 	@Override
@@ -48,24 +63,25 @@ public class Visitor extends Application {
 		primaryStage.setResizable(false);
 		primaryStage.show();
 	}
-	
-	public static boolean enrollUser(String phoneNumber) {
+
+	public static boolean enrollUser(String phoneNumber) throws UserAlreadyRegisteredException {
 		try {
 			Registry myRegistry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
 			RegistrarInterface registrar = (RegistrarInterface) myRegistry.lookup(Values.REGISTRAR_SERVICE);
-			return registrar.enrollUser(phoneNumber);
+			registrar.enrollUser(phoneNumber);
+			return true;
 		} catch (RemoteException | NotBoundException re) {
 			re.printStackTrace();
 			Alert alert = new Alert(AlertType.WARNING);
 			alert.setTitle("Registration failed!");
-			alert.setHeaderText("Registration failed");
-			alert.setContentText("This phone number is already in use! If this is your first registration, please contact the app developers.");
+			alert.setHeaderText("Registration failed.");
+			alert.setContentText("Please contact the app developers, Internal Server Error detected.");
 			alert.showAndWait();
 			return false;
 		}
 	}
-	
-	public static List<Token> getTokenAllocation(String phoneNumber) {
+
+	public static List<Token> getTokenAllocation(String phoneNumber) throws TokensAlreadyIssuedException {
 		try {
 			Registry myRegistry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
 			RegistrarInterface registrar = (RegistrarInterface) myRegistry.lookup(Values.REGISTRAR_SERVICE);
@@ -75,11 +91,9 @@ public class Visitor extends Application {
 				Alert alert = new Alert(AlertType.ERROR);
 				alert.setTitle("User identification error.");
 				alert.setHeaderText("Server failed to identify user.");
-				alert.setContentText("A server issue was encountered identifying the user. Please contact a server admin.");
+				alert.setContentText(
+						"A server issue was encountered identifying the user. Please contact a server admin.");
 				alert.showAndWait();
-				return null;
-			} catch (TokensAlreadyIssuedException taie) {
-				taie.printStackTrace();
 				return null;
 			}
 		} catch (RemoteException | NotBoundException e) {
@@ -88,51 +102,212 @@ public class Visitor extends Application {
 			return null;
 		}
 	}
-	
-	public static void register(String name, String phoneNumber, String password) {
-		if(enrollUser(phoneNumber)) {
-			//if this is succesfull, it's a newly registered account and a .csv should be constructed
-		} else {
-			//in this case we just need to make an alert to check server availability or this number might already be registered.
-		}
-	}
-	
-	private static void noGuiTest() {
-		String number = "0472/07 77 74";
-		if(enrollUser(number)) {
-			System.out.println("Register: Success!");
-		} else {
-			System.out.println("Register: Already registered!");
-		}
-		List<Token> todaysTokens = getTokenAllocation(number);
-		if(todaysTokens == null) {
-			System.out.println("gettingTokens: Failure.");
-			System.exit(0);
-		} else {
-			System.out.println("gettingTokens: Success.");
-			allTokens.put(LocalDate.now(), todaysTokens);
-			Stack tokens = new Stack();
-			tokens.addAll(todaysTokens);
-			tokenCache.put(LocalDate.now(), tokens);
-		}
-		List<Token> duplicateTokens = getTokenAllocation(number);
-		if(duplicateTokens != null) {
-			System.out.println("uh oh...");
-		} else {
-			System.out.println("Second Batch not received :)");
-		}
-		int count = 0;
+
+	public static boolean register(String name, String phoneNumber, String password) {
 		try {
-			while(count < 55) {
-				tokenCache.get(LocalDate.now()).pop();
-				count++;
+			if (enrollUser(phoneNumber)) {
+				// if this is succesfull, it's a newly registered account and a .csv should be
+				// constructed; return true so GUI knows that a new window should be opened.
+				// if this returns false, server is not available: do not notify failure to
+				// report: an alert is already fired
+				// --> just reset the UI: return false?
+				// if user is already registered, this will throw an error. 
+				// -- hindsight: this might've been better the other way around?
+				Visitor.fileName = Values.FILE_DIR + "Visitor_" + phoneNumber + ".csv";
+				File file = new File(fileName);
+				if (!file.createNewFile()) {
+					System.err.println("file overwritten for number: " + phoneNumber);
+				}
+				FileWriter fw = new FileWriter(file);
+
+				fw.write(name + System.lineSeparator());
+				fw.write(password + System.lineSeparator());
+				fw.write(phoneNumber + System.lineSeparator());
+				
+				Visitor.user = new User(name, password, phoneNumber);
+
+				Gson gson = new GsonBuilder().registerTypeAdapter(LocalDate.class, new TypeAdapter<LocalDate>() {
+					@Override
+					public void write(JsonWriter jsonWriter, LocalDate localDate) throws IOException {
+						jsonWriter.value(localDate.toString());
+					}
+
+					@Override
+					public LocalDate read(JsonReader jsonReader) throws IOException {
+						return LocalDate.parse(jsonReader.nextString());
+					}
+
+				}).create();
+				
+				fw.write(gson.toJson(Visitor.issuedTokens));
+				
+				fw.flush();
+				fw.close();
+				
+				return true;
+			} else {
+				// in this case return false: error is handled, we just need to let UI know to
+				// reset fields
+				return false;
 			}
-		} catch (EmptyStackException ese) {
-			System.out.println("expected amount: 48");
-			System.out.println("amount of tokens received today: " + count);
-			System.out.println(allTokens.get(LocalDate.now()).size());
-		} finally {
-			System.exit(0);
+		} catch (UserAlreadyRegisteredException e) {
+			// reset fields == return false
+			System.out.println("Registration not succesful: user already registered.");
+			Alert alert = new Alert(AlertType.INFORMATION);
+			alert.setTitle("Registration Info");
+			alert.setHeaderText("Duplicate Registration attempt.");
+			alert.setContentText("A user with this phone number is already registered. Try logging in instead.");
+			alert.showAndWait();
+			return false;
+		} catch (IOException ioe) {
+			System.out.println("IOException caught, exiting program...");
+			System.exit(1);
+			return false;
 		}
 	}
+	
+	public static boolean login(String phoneNumber, String password) {
+		try {
+			fileName = Values.FILE_DIR + "Visitor_" + phoneNumber + ".csv";
+			File file = new File(fileName);
+			
+			Scanner sc = new Scanner(file);
+			Visitor.user = new User(sc.nextLine(), sc.nextLine(), sc.nextLine());
+			
+			//return false if the user exists but the password is wrong
+			if(!Visitor.user.getPassw().equals(password)) {
+				sc.close();
+				System.out.println("attempted pass: " + password);
+				System.out.println("logged pass: " + Visitor.user.getPassw());
+				return false;
+			}
+			
+			Gson gson = new GsonBuilder().registerTypeAdapter(LocalDate.class, new TypeAdapter<LocalDate>() {
+				@Override
+				public void write(JsonWriter jsonWriter, LocalDate localDate) throws IOException {
+					jsonWriter.value(localDate.toString());
+				}
+
+				@Override
+				public LocalDate read(JsonReader jsonReader) throws IOException {
+					return LocalDate.parse(jsonReader.nextString());
+				}
+
+			}).create();
+			
+			Type tokenMapType = new TypeToken<Map<LocalDate, List<Token>>>() {
+			}.getType();
+			Visitor.issuedTokens = gson.fromJson(sc.nextLine(), tokenMapType);
+			
+			sc.close();
+			return true;
+		} catch (FileNotFoundException e) {
+			System.out.println("file not found...");
+			e.printStackTrace();
+			return false;
+		}
+	}
+	
+	public static void updateFile() {
+		try {
+			FileWriter fw = new FileWriter(new File(Visitor.fileName));
+
+			fw.write(Visitor.user.getUsn() + System.lineSeparator());
+			fw.write(Visitor.user.getPassw() + System.lineSeparator());
+			fw.write(Visitor.user.getPhoneNr() + System.lineSeparator());
+
+			Gson gson = new GsonBuilder().registerTypeAdapter(LocalDate.class, new TypeAdapter<LocalDate>() {
+				@Override
+				public void write(JsonWriter jsonWriter, LocalDate localDate) throws IOException {
+					jsonWriter.value(localDate.toString());
+				}
+
+				@Override
+				public LocalDate read(JsonReader jsonReader) throws IOException {
+					return LocalDate.parse(jsonReader.nextString());
+				}
+
+			}).create();
+			
+			fw.write(gson.toJson(Visitor.issuedTokens));
+			
+			fw.flush();
+			fw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("error opening file in updateFile()-method.");
+		}
+	}
+	
+	public static User getUser() {
+		return Visitor.user;
+	}
+	
+	public static Map<LocalDate, List<Token>> getTokens(){
+		return Visitor.issuedTokens;
+	}
+
+}
+
+class User {
+	private String usn;
+	private String passw;
+	private String phoneNr;
+
+	public String getUsn() {
+		return usn;
+	}
+
+	public void setUsn(String usn) {
+		this.usn = usn;
+	}
+
+	public String getPassw() {
+		return passw;
+	}
+
+	public void setPassw(String passw) {
+		this.passw = passw;
+	}
+
+	public String getPhoneNr() {
+		return phoneNr;
+	}
+
+	public void setPhoneNr(String phoneNr) {
+		this.phoneNr = phoneNr;
+	}
+
+	public User(String usn, String passw, String phoneNr) {
+		super();
+		this.usn = usn;
+		this.passw = passw;
+		this.phoneNr = phoneNr;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((phoneNr == null) ? 0 : phoneNr.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		User other = (User) obj;
+		if (phoneNr == null) {
+			if (other.phoneNr != null)
+				return false;
+		} else if (!phoneNr.equals(other.phoneNr))
+			return false;
+		return true;
+	}
+
 }

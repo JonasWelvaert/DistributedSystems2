@@ -187,19 +187,18 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	}
 
 	@Override
-	public synchronized boolean enrollUser(String phoneNumber) throws RemoteException{
+	public synchronized void enrollUser(String phoneNumber) throws RemoteException, UserAlreadyRegisteredException{
 		try {
 			User user = new User(phoneNumber);
 			updateFile();
 		} catch (NotInitialisedException e) {
 			System.err.println("arrived in illegal state with 'enrollUser(String)-method', should never throw this error.");
 			e.printStackTrace();
-			throw new RemoteException("Problem with system initialisation... -- call User.initialise(int) to fix.");
+			throw new RemoteException("Problem with Server System initialisation... -- call User.initialise(int) to fix.");
 		} catch (UserAlreadyRegisteredException uare) {
 			System.out.println("User already registered...");
-			return false;
+			throw uare;
 		}
-		return true;
 	}
 
 	@Override

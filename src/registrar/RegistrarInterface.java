@@ -29,7 +29,7 @@ public interface RegistrarInterface extends Remote {
 	 * @param telefoonNummer
 	 * @return success = true, false if already registered
 	 */
-	public boolean enrollUser(String phoneNumber) throws RemoteException;
+	public void enrollUser(String phoneNumber) throws RemoteException, UserAlreadyRegisteredException;
 
 	/**
 	 * @return PublicKey pubkey: wordt gebruikt voor controle van signed tokens

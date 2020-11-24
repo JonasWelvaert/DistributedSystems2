@@ -1,6 +1,10 @@
 package visitor;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -13,6 +17,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.ArcType;
+import registrar.TokensAlreadyIssuedException;
+import sharedclasses.Token;
 
 public class VisitorHomeController {
 	@FXML
@@ -32,8 +38,25 @@ public class VisitorHomeController {
 
 	@FXML
 	private void initialize() {
+		//try to fetch daily tokens
+		try {
+			//if this IS null, a server error occured with registration and system should exit for retry.
+			Map <LocalDate, List<Token>> todaysTokens = Visitor.getTokenAllocation(Visitor.getUser().getPhoneNr());
+			if( todaysTokens == null) {
+				System.exit(1);
+			}
+				//make sure to add the correct date (the one that was fetched from the server
+			Set<LocalDate> keys = todaysTokens.keySet();
+			for(LocalDate date : keys) {
+				System.out.println("Adding tokens to user " + Visitor.getUser().getPhoneNr() + " for date " + date);
+				Visitor.getTokens().put(date, todaysTokens.get(date));
+			}
+		} catch (TokensAlreadyIssuedException e) {
+			System.out.println("Tokens were already fetched today for user " + Visitor.getUser().getPhoneNr() +", no duplication allowed!");
+		}
+		//do some initialisation
 		apHorecaInformation.setVisible(false);
-
+		
 		buttonRegisterAtHoreca.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {

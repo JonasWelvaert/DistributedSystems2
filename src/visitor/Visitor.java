@@ -105,7 +105,7 @@ public class Visitor extends Application {
 				alert.setTitle("User identification error.");
 				alert.setHeaderText("Server failed to identify user.");
 				alert.setContentText(
-						"A server issue was encountered identifying the user. Please contact a server admin.");
+						"A server issue was encountered identifying the user. Please contact a server admin. System will exit...");
 				alert.showAndWait();
 				return null;
 			}

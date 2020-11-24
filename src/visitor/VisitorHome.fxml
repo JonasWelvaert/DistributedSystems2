@@ -7,15 +7,22 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="visitor.VisitorHomeController">
    <children>
-      <Button fx:id="buttonRegisterAtHoreca" layoutX="210.0" layoutY="39.0" mnemonicParsing="false" text="Register @HORECA" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="30.0" />
-      <TextField fx:id="tfQrCodeContent" layoutX="14.0" layoutY="39.0" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="30.0" />
-      <Label layoutX="12.0" layoutY="14.0" text="Type here the QR-code content of the visited HORECA:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0" />
+      <AnchorPane fx:id="apHorecaForm">
+         <children>
+            <Label text="Type here the QR-code content of the visited HORECA:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0" />
+            <TextField fx:id="tfQrCodeContent" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="30.0" />
+            <Button fx:id="buttonRegisterAtHoreca" mnemonicParsing="false" text="Register @HORECA" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="30.0" />
+         </children>
+      </AnchorPane>
       <AnchorPane fx:id="apHorecaInformation" layoutX="8.0" layoutY="80.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="70.0">
          <children>
-            <Label text="Registered HORECA:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
-            <Canvas fx:id="proofOfRegistration" height="300.0" layoutX="59.0" layoutY="63.0" width="300.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="40.0" />
-            <Label layoutX="8.0" layoutY="21.0" text="Today's proof of registration:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="20.0" />
-            <Label fx:id="labelHorecaName" layoutX="142.0" text="name" AnchorPane.leftAnchor="140.0" AnchorPane.topAnchor="0.0" />
+            <Label text="You are visiting:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
+            <Canvas fx:id="proofOfRegistration" height="300.0" layoutX="59.0" layoutY="63.0" width="300.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0" />
+            <Label layoutX="8.0" layoutY="21.0" text="Today's proof of registration:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="40.0" />
+            <Label fx:id="labelHorecaName" layoutX="142.0" text="name" AnchorPane.leftAnchor="110.0" AnchorPane.topAnchor="0.0" />
+            <Label layoutY="21.0" text="Entrance time:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="20.0" />
+            <Label fx:id="labelTimeOfRegistration" layoutX="103.0" layoutY="20.0" text="time" AnchorPane.leftAnchor="110.0" AnchorPane.topAnchor="20.0" />
+            <Button fx:id="buttonLeaveHoreca" layoutX="149.0" layoutY="331.0" mnemonicParsing="false" text="Leave" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0" AnchorPane.topAnchor="360.0" />
          </children>
       </AnchorPane>
    </children>

@@ -7,5 +7,9 @@ public final class Values {
 	public static final int REGISTRAR_PORT = 1099;
 	public static final String REGISTRAR_HOSTNAME = "localhost";
 	
+	public static final String MIXINGPROXY_SERVICE = "MixingProxyService";
+	public static final int MIXINGPROXY_PORT = 1099;
+	public static final String MIXINGPROXY_HOSTNAME ="localhost";
+	
 	public static final int CRITICAL_PERIOD_IN_DAYS = 14;
 }

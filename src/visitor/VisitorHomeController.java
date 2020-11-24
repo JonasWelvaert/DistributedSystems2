@@ -38,11 +38,14 @@ public class VisitorHomeController {
 			@Override
 			public void handle(ActionEvent event) {
 				String qrCodeContent = tfQrCodeContent.getText();
+				String s1 = qrCodeContent.substring(1, qrCodeContent.length()-1);
+				String[] s2 = s1.split(", ");
+				System.out.println(s2);
 				if (qrCodeContent != null && !qrCodeContent.equals("")) {
 					// TODO inputverwerken, registeren bij mixing proxy
 
 					// TODO change this figure.
-					labelHorecaName.setText(qrCodeContent);
+					labelHorecaName.setText(s2[1]);
 					setProofOfRegistration(qrCodeContent);
 					apHorecaInformation.setVisible(true);
 				}

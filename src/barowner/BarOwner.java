@@ -71,7 +71,7 @@ public class BarOwner extends Application {
 			FXMLLoader loader = new FXMLLoader();
 			loader.setLocation(BarOwner.class.getResource("/barowner/BarOwnerInfo.fxml"));
 			Parent root = loader.load();
-			Scene scene = new Scene(root, 300, 540);
+			Scene scene = new Scene(root, 300, 300);
 			primaryStage.setScene(scene);
 			primaryStage.show();
 		} catch (IOException e) {

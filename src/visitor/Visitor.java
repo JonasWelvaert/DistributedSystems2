@@ -67,6 +67,7 @@ public class Visitor extends Application {
 		try {
 			Parent root = FXMLLoader.load(Visitor.class.getResource("/visitor/VisitorHome.fxml"));
 			Scene scene = new Scene(root);
+			primaryStage.setTitle(Visitor.user.getPhoneNr());
 			primaryStage.setScene(scene);
 			primaryStage.show();
 		} catch (IOException e) {

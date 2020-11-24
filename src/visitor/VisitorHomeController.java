@@ -55,12 +55,13 @@ public class VisitorHomeController {
 			if( todaysTokens == null) {
 				System.exit(1);
 			}
-				//make sure to add the correct date (the one that was fetched from the server
+			//make sure to add the correct date (the one that was fetched from the server
 			Set<LocalDate> keys = todaysTokens.keySet();
 			for(LocalDate date : keys) {
 				System.out.println("Adding tokens to user " + Visitor.getUser().getPhoneNr() + " for date " + date);
 				Visitor.getIssuedTokens().put(date, todaysTokens.get(date));
 			}
+			Visitor.updateFile();
 		} catch (TokensAlreadyIssuedException e) {
 			System.out.println("Tokens were already fetched today for user " + Visitor.getUser().getPhoneNr() +", no duplication allowed!");
 		}

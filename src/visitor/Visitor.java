@@ -132,6 +132,7 @@ public class Visitor extends Application {
 				// if user is already registered, this will throw an error.
 				// -- hindsight: this might've been better the other way around?
 				Visitor.fileName = Values.FILE_DIR + "Visitor_" + phoneNumber + ".csv";
+				Visitor.user = new User(name, password, phoneNumber);
 				updateFile();
 				return true;
 			} else {

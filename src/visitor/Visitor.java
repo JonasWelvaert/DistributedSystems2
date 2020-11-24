@@ -10,6 +10,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +31,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
+import mixingproxy.Capsule;
+import mixingproxy.MixingProxyInterface;
 import registrar.RegistrarInterface;
 import registrar.TokensAlreadyIssuedException;
 import registrar.UserAlreadyRegisteredException;
 import registrar.UserNotRegisteredException;
+import rmissl.RMISSLClientSocketFactory;
 import sharedclasses.Token;
 import values.Values;
 
@@ -224,8 +229,49 @@ public class Visitor extends Application {
 		return Visitor.user;
 	}
 
-	public static Map<LocalDate, List<Token>> getTokens() {
+	public static Map<LocalDate, List<Token>> getIssuedTokens() {
 		return Visitor.issuedTokens;
+	}
+
+	public static byte[] registerVisit(String random, String barname, String hash) {
+		try {
+			LocalDateTime entryTime = LocalDateTime.now();
+
+			Registry myRegistry = LocateRegistry.getRegistry(Values.MIXINGPROXY_HOSTNAME, Values.MIXINGPROXY_PORT,
+					new RMISSLClientSocketFactory());
+			MixingProxyInterface mixingProxy = (MixingProxyInterface) myRegistry.lookup(Values.MIXINGPROXY_SERVICE);
+
+			List<Token> tokens = issuedTokens.get(entryTime.toLocalDate());
+			if (tokens == null || tokens.size() == 0) {
+				try {
+					issuedTokens.putAll(Visitor.getTokenAllocation(user.getPhoneNr()));
+				} catch (TokensAlreadyIssuedException e) {
+					Alert alert = new Alert(AlertType.INFORMATION);
+					alert.setTitle("Info");
+					alert.setHeaderText("You can't register again at a horeca.");
+					alert.setContentText("You've already visited to much horeca today. Try again tomorrow!");
+					alert.showAndWait();
+					return null;
+				}
+			}
+			tokens = issuedTokens.get(entryTime.toLocalDate());
+			Token token = Token.getFirstUnused(tokens);
+
+			Capsule capsule = new Capsule();
+			capsule.setCurrentTime(entryTime);
+			capsule.setHash(hash);
+			capsule.setUserToken(token);
+			byte[] signedHash = mixingProxy.registerVisit(capsule);
+			// TODO:gegevens ook lokaal op phone opslaan.
+
+			return signedHash;
+		} catch (RemoteException e) {
+			e.printStackTrace();
+			return null;
+		} catch (NotBoundException e) {
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 }

@@ -67,23 +67,18 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			Type cfListType = new TypeToken<List<CateringFacility>>() {
 			}.getType();
 			cateringFacilitys = gson.fromJson(scanner.nextLine(), cfListType);
-			
-			//KeyPair	
-			try {
-				KeyFactory keyFactory = KeyFactory.getInstance("DSA");
-				PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
-				PrivateKey privkey = keyFactory.generatePrivate(privSpec);
-				
-				X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
-				PublicKey pubkey = keyFactory.generatePublic(pubSpec);
-				
-				keyPair = new KeyPair(pubkey, privkey);
-			} catch (InvalidKeySpecException e) {
-				System.err.println("invalid keyspec for keyPair reading.");
-				e.printStackTrace();
-			}
-			
-			//info over de visitors
+
+			// KeyPair
+			KeyFactory keyFactory = KeyFactory.getInstance("DSA");
+			PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
+			PrivateKey privkey = keyFactory.generatePrivate(privSpec);
+
+			X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
+			PublicKey pubkey = keyFactory.generatePublic(pubSpec);
+
+			keyPair = new KeyPair(pubkey, privkey);
+
+			// info over de visitors
 			Type userListType = new TypeToken<List<User>>() {
 			}.getType();
 			users = gson.fromJson(scanner.nextLine(), userListType);
@@ -95,19 +90,24 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 
 			scanner.close();
 		} catch (FileNotFoundException e) {
-			//generate secretKey
+			// generate secretKey
 			KeyGenerator keyGen = KeyGenerator.getInstance("AES");
 			keyGen.init(256);
 			secretKey = keyGen.generateKey().getEncoded();
-			//generate KeyPair for signing
+			// generate KeyPair for signing
 			KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
 			keyPair = kpg.generateKeyPair();
-			
-			//initialise lists
+
+			// initialise lists
 			cateringFacilitys = new ArrayList<>();
 			users = new ArrayList<>();
 			User.initialiseUserSystem(Values.CRITICAL_PERIOD_IN_DAYS, users);
 			// TODO: lege info
+		} catch (InvalidKeySpecException e) {
+			System.err.println("invalid keyspec for keyPair reading.");
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -133,12 +133,12 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 
 			}).create();
 			fw.write(gson.toJson(cateringFacilitys) + System.lineSeparator());
-			
-			//KeyPair
+
+			// KeyPair
 			fw.write(Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()) + System.lineSeparator());
-			fw.write(Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded())  + System.lineSeparator());
-			
-			//visitors
+			fw.write(Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()) + System.lineSeparator());
+
+			// visitors
 			fw.write(gson.toJson(users) + System.lineSeparator());
 
 			// TODO: info wegschrijven naar file.
@@ -185,14 +185,16 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	}
 
 	@Override
-	public synchronized void enrollUser(String phoneNumber) throws RemoteException, UserAlreadyRegisteredException{
+	public synchronized void enrollUser(String phoneNumber) throws RemoteException, UserAlreadyRegisteredException {
 		try {
-			new User(phoneNumber);	//Constructor does already
+			new User(phoneNumber); // Constructor does already
 			updateFile();
 		} catch (NotInitialisedException e) {
-			System.err.println("arrived in illegal state with 'enrollUser(String)-method', should never throw this error.");
+			System.err.println(
+					"arrived in illegal state with 'enrollUser(String)-method', should never throw this error.");
 			e.printStackTrace();
-			throw new RemoteException("Problem with Server System initialisation... -- call User.initialise(int) to fix.");
+			throw new RemoteException(
+					"Problem with Server System initialisation... -- call User.initialise(int) to fix.");
 		} catch (UserAlreadyRegisteredException uare) {
 			System.out.println("User already registered...");
 			throw uare;
@@ -200,25 +202,28 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	}
 
 	@Override
-	public synchronized Map<LocalDate, List<Token>> retrieveTokens(String phoneNumber) throws TokensAlreadyIssuedException, UserNotRegisteredException {
+	public synchronized Map<LocalDate, List<Token>> retrieveTokens(String phoneNumber)
+			throws TokensAlreadyIssuedException, UserNotRegisteredException {
 		User user = User.findUser(phoneNumber);
-		if(user == null) {
+		if (user == null) {
 			throw new UserNotRegisteredException(phoneNumber);
 		}
 		Map<LocalDate, List<Token>> tokensMap = new HashMap<>();
-		List<Token> tokens= new ArrayList<Token>(48);
+		List<Token> tokens = new ArrayList<Token>(48);
 		SecureRandom rng = User.getRNG();
-		if(rng == null) {
+		if (rng == null) {
 			System.out.println("System not initialised correctly -- returning null tokens.");
 		}
 		LocalDate date = LocalDate.now();
-		for(int i=0; i<48; i++) {
+		for (int i = 0; i < 48; i++) {
 			tokens.add(Token.createToken(this.keyPair.getPrivate(), rng, date));
 		}
 		tokensMap.put(date, tokens);
-		//nu hebben we een lijst tokens aangemaakt & ondertekend. Deze moeten geregistreerd worden bij de user.
-		if(!User.addTokens(user, tokensMap)) {
-			System.out.println("Something went wrong finding the user in the User.addTokens-method. Called by retrieveTokens RMI method.");
+		// nu hebben we een lijst tokens aangemaakt & ondertekend. Deze moeten
+		// geregistreerd worden bij de user.
+		if (!User.addTokens(user, tokensMap)) {
+			System.out.println(
+					"Something went wrong finding the user in the User.addTokens-method. Called by retrieveTokens RMI method.");
 		}
 		updateFile();
 		return tokensMap;

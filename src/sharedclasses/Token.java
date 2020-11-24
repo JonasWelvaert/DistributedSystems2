@@ -7,9 +7,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.security.*;
-
 public class Token implements Serializable {
+	private static final long serialVersionUID = 1L;
 	private byte[] token;
 	private byte[] signature;
 	//this is for visitors, servers will check their local db!
@@ -58,9 +57,9 @@ public class Token implements Serializable {
 	 * @param sr: SecureRandom as created in the User-class (registrar-side)
 	 * @return
 	 */
-	public static Token createToken(PrivateKey privkey, SecureRandom sr) {
+	public static Token createToken(PrivateKey privkey, SecureRandom sr, LocalDate date) {
 		try {
-			byte[] ld = LocalDate.now().toString().getBytes();
+			byte[] ld = date.toString().getBytes();
 			byte[] random = new byte[22];
 			sr.nextBytes(random);
 			byte[] preToken = new byte[32];

@@ -1,6 +1,11 @@
 package registrar;
 
 public class UserNotRegisteredException extends Exception {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public UserNotRegisteredException() {
 		super();
 	}

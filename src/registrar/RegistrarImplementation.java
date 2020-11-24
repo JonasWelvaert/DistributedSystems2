@@ -24,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Stack;
 
 import javax.crypto.KeyGenerator;
 
@@ -37,7 +36,6 @@ import com.google.gson.stream.JsonWriter;
 
 import sharedclasses.Token;
 import values.Values;
-import visitor.Visitor;
 
 public class RegistrarImplementation extends UnicastRemoteObject implements RegistrarInterface {
 
@@ -189,7 +187,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	@Override
 	public synchronized void enrollUser(String phoneNumber) throws RemoteException, UserAlreadyRegisteredException{
 		try {
-			User user = new User(phoneNumber);
+			new User(phoneNumber);	//Constructor does already
 			updateFile();
 		} catch (NotInitialisedException e) {
 			System.err.println("arrived in illegal state with 'enrollUser(String)-method', should never throw this error.");
@@ -202,25 +200,28 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	}
 
 	@Override
-	public synchronized List<Token> retrieveTokens(String phoneNumber) throws TokensAlreadyIssuedException, UserNotRegisteredException {
+	public synchronized Map<LocalDate, List<Token>> retrieveTokens(String phoneNumber) throws TokensAlreadyIssuedException, UserNotRegisteredException {
 		User user = User.findUser(phoneNumber);
 		if(user == null) {
 			throw new UserNotRegisteredException(phoneNumber);
 		}
+		Map<LocalDate, List<Token>> tokensMap = new HashMap<>();
 		List<Token> tokens= new ArrayList<Token>(48);
 		SecureRandom rng = User.getRNG();
 		if(rng == null) {
 			System.out.println("System not initialised correctly -- returning null tokens.");
 		}
+		LocalDate date = LocalDate.now();
 		for(int i=0; i<48; i++) {
-			tokens.add(Token.createToken(this.keyPair.getPrivate(), rng));
+			tokens.add(Token.createToken(this.keyPair.getPrivate(), rng, date));
 		}
+		tokensMap.put(date, tokens);
 		//nu hebben we een lijst tokens aangemaakt & ondertekend. Deze moeten geregistreerd worden bij de user.
-		if(!User.addTokens(user, tokens)) {
+		if(!User.addTokens(user, tokensMap)) {
 			System.out.println("Something went wrong finding the user in the User.addTokens-method. Called by retrieveTokens RMI method.");
 		}
 		updateFile();
-		return tokens;
+		return tokensMap;
 	}
 
 	@Override

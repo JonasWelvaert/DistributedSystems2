@@ -1,7 +1,6 @@
 package registrar;
 
 import java.security.*;
-import javax.security.*;
 
 import sharedclasses.Token;
 
@@ -10,7 +9,6 @@ import java.rmi.RemoteException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 
 public interface RegistrarInterface extends Remote {
 	/**
@@ -43,7 +41,7 @@ public interface RegistrarInterface extends Remote {
 	 * @throws RemoteException
 	 * @throws UserNotRegisteredException
 	 */
-	public List<Token> retrieveTokens(String phoneNumber) throws RemoteException, UserNotRegisteredException, TokensAlreadyIssuedException;
+	public Map<LocalDate, List<Token>> retrieveTokens(String phoneNumber) throws RemoteException, UserNotRegisteredException, TokensAlreadyIssuedException;
 
 	public void addUnacknowledgedLogs(List<Token> unacknowledgedTokens) throws RemoteException;
 

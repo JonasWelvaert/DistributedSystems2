@@ -9,14 +9,11 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.security.PublicKey;
 import java.time.LocalDate;
-import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-import java.util.Stack;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -25,7 +22,6 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-import barowner.BarOwner;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -33,7 +29,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
-import registrar.CateringFacility;
 import registrar.RegistrarInterface;
 import registrar.TokensAlreadyIssuedException;
 import registrar.UserAlreadyRegisteredException;
@@ -53,15 +48,31 @@ public class Visitor extends Application {
 	}
 
 	@Override
-	public void start(Stage primaryStage) throws Exception {
-		Visitor.primaryStage = primaryStage;
-		Parent root = FXMLLoader.load(getClass().getResource("/visitor/VisitorRegister.fxml"));
-		Scene scene = new Scene(root);
+	public void start(Stage primaryStage) {
+		try {
+			Visitor.primaryStage = primaryStage;
+			Parent root = FXMLLoader.load(getClass().getResource("/visitor/VisitorRegister.fxml"));
+			Scene scene = new Scene(root);
 
-		primaryStage.setTitle("Visitor's application");
-		primaryStage.setScene(scene);
-		primaryStage.setResizable(false);
-		primaryStage.show();
+			primaryStage.setTitle("Visitor's application");
+			primaryStage.setScene(scene);
+			primaryStage.setResizable(false);
+			primaryStage.show();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	public static void openVisitorHomeGUI() {
+		try {
+			Parent root = FXMLLoader.load(Visitor.class.getResource("/visitor/VisitorHome.fxml"));
+			Scene scene = new Scene(root);
+			primaryStage.setScene(scene);
+			primaryStage.show();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public static boolean enrollUser(String phoneNumber) throws UserAlreadyRegisteredException {
@@ -81,7 +92,8 @@ public class Visitor extends Application {
 		}
 	}
 
-	public static List<Token> getTokenAllocation(String phoneNumber) throws TokensAlreadyIssuedException {
+	public static Map<LocalDate, List<Token>> getTokenAllocation(String phoneNumber)
+			throws TokensAlreadyIssuedException {
 		try {
 			Registry myRegistry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
 			RegistrarInterface registrar = (RegistrarInterface) myRegistry.lookup(Values.REGISTRAR_SERVICE);
@@ -111,39 +123,10 @@ public class Visitor extends Application {
 				// if this returns false, server is not available: do not notify failure to
 				// report: an alert is already fired
 				// --> just reset the UI: return false?
-				// if user is already registered, this will throw an error. 
+				// if user is already registered, this will throw an error.
 				// -- hindsight: this might've been better the other way around?
 				Visitor.fileName = Values.FILE_DIR + "Visitor_" + phoneNumber + ".csv";
-				File file = new File(fileName);
-				if (!file.createNewFile()) {
-					System.err.println("file overwritten for number: " + phoneNumber);
-				}
-				FileWriter fw = new FileWriter(file);
-
-				fw.write(name + System.lineSeparator());
-				fw.write(password + System.lineSeparator());
-				fw.write(phoneNumber + System.lineSeparator());
-				
-				Visitor.user = new User(name, password, phoneNumber);
-
-				Gson gson = new GsonBuilder().registerTypeAdapter(LocalDate.class, new TypeAdapter<LocalDate>() {
-					@Override
-					public void write(JsonWriter jsonWriter, LocalDate localDate) throws IOException {
-						jsonWriter.value(localDate.toString());
-					}
-
-					@Override
-					public LocalDate read(JsonReader jsonReader) throws IOException {
-						return LocalDate.parse(jsonReader.nextString());
-					}
-
-				}).create();
-				
-				fw.write(gson.toJson(Visitor.issuedTokens));
-				
-				fw.flush();
-				fw.close();
-				
+				updateFile();
 				return true;
 			} else {
 				// in this case return false: error is handled, we just need to let UI know to
@@ -159,29 +142,25 @@ public class Visitor extends Application {
 			alert.setContentText("A user with this phone number is already registered. Try logging in instead.");
 			alert.showAndWait();
 			return false;
-		} catch (IOException ioe) {
-			System.out.println("IOException caught, exiting program...");
-			System.exit(1);
-			return false;
 		}
 	}
-	
+
 	public static boolean login(String phoneNumber, String password) {
 		try {
 			fileName = Values.FILE_DIR + "Visitor_" + phoneNumber + ".csv";
 			File file = new File(fileName);
-			
+
 			Scanner sc = new Scanner(file);
 			Visitor.user = new User(sc.nextLine(), sc.nextLine(), sc.nextLine());
-			
-			//return false if the user exists but the password is wrong
-			if(!Visitor.user.getPassw().equals(password)) {
+
+			// return false if the user exists but the password is wrong
+			if (!Visitor.user.getPassw().equals(password)) {
 				sc.close();
 				System.out.println("attempted pass: " + password);
 				System.out.println("logged pass: " + Visitor.user.getPassw());
 				return false;
 			}
-			
+
 			Gson gson = new GsonBuilder().registerTypeAdapter(LocalDate.class, new TypeAdapter<LocalDate>() {
 				@Override
 				public void write(JsonWriter jsonWriter, LocalDate localDate) throws IOException {
@@ -194,11 +173,11 @@ public class Visitor extends Application {
 				}
 
 			}).create();
-			
+
 			Type tokenMapType = new TypeToken<Map<LocalDate, List<Token>>>() {
 			}.getType();
 			Visitor.issuedTokens = gson.fromJson(sc.nextLine(), tokenMapType);
-			
+
 			sc.close();
 			return true;
 		} catch (FileNotFoundException e) {
@@ -207,10 +186,12 @@ public class Visitor extends Application {
 			return false;
 		}
 	}
-	
+
 	public static void updateFile() {
 		try {
-			FileWriter fw = new FileWriter(new File(Visitor.fileName));
+			File file = new File(fileName);
+			file.createNewFile();
+			FileWriter fw = new FileWriter(file);
 
 			fw.write(Visitor.user.getUsn() + System.lineSeparator());
 			fw.write(Visitor.user.getPassw() + System.lineSeparator());
@@ -228,22 +209,21 @@ public class Visitor extends Application {
 				}
 
 			}).create();
-			
-			fw.write(gson.toJson(Visitor.issuedTokens));
-			
+
+			fw.write(gson.toJson(Visitor.issuedTokens) + System.lineSeparator());
+
 			fw.flush();
 			fw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-			System.out.println("error opening file in updateFile()-method.");
 		}
 	}
-	
+
 	public static User getUser() {
 		return Visitor.user;
 	}
-	
-	public static Map<LocalDate, List<Token>> getTokens(){
+
+	public static Map<LocalDate, List<Token>> getTokens() {
 		return Visitor.issuedTokens;
 	}
 

@@ -36,6 +36,7 @@ public class VisitorRegisterController {
     	if(Visitor.login(phoneNumber, password)) {
     		//close this window & open a new one.
     		System.out.println("registration succesful, file read & password validated.");
+    		Visitor.openVisitorHomeGUI();
     	} else {
     		System.out.println("Login unsuccesful.");
     		resetGUI();
@@ -55,6 +56,7 @@ public class VisitorRegisterController {
     	if(Visitor.register(name, phoneNumber, password)) {
     		//close this window & open a new one.
     		System.out.println("registration succesful, file created and user logged.");
+    		Visitor.openVisitorHomeGUI();
     	} else {
     		System.out.println("registration unsuccesful.");
     		resetGUI();

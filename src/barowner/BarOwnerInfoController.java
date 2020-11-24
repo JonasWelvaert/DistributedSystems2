@@ -8,7 +8,6 @@ import java.util.Arrays;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -32,11 +31,6 @@ public class BarOwnerInfoController {
 	@FXML
 	private Button copyToClipboard;
 
-	@FXML
-	private Label proofOfRegistration_label;
-
-	@FXML
-	private Canvas proofOfRegistration;
 
 	@FXML
 	private void initialize() {
@@ -56,8 +50,5 @@ public class BarOwnerInfoController {
 				clipboard.setContent(content);
 			}
 		});
-
-		// TODO change this figure.
-		proofOfRegistration.getGraphicsContext2D().fillOval(10, 60, 30, 30);
 	}
 }

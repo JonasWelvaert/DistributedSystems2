@@ -30,7 +30,5 @@
          </children>
       </FlowPane>
       <ImageView fx:id="qrCode" fitHeight="200.0" fitWidth="200.0" layoutX="8.0" layoutY="105.0" pickOnBounds="true" preserveRatio="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="75.0" />
-      <Label fx:id="proofOfRegistration_label" text="Today's proof of registration:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="280.0" />
-      <Canvas fx:id="proofOfRegistration" height="200.0" width="200.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="300.0" />
    </children>
 </AnchorPane>

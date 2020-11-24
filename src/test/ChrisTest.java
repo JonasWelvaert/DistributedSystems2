@@ -101,7 +101,7 @@ public class ChrisTest {
 			KeyPairGenerator kpg = KeyPairGenerator.getInstance("DSA");
 			KeyPair keyPair = kpg.generateKeyPair();
 			
-			Token token = Token.createToken(keyPair.getPrivate(), sr);
+			Token token = Token.createToken(keyPair.getPrivate(), sr, LocalDate.now());
 			System.out.println("checking signature: "+token.checkSignature(keyPair.getPublic()));
 			System.out.println("checking correct date: " + token.checkIssuedDate(LocalDate.now()));
 			System.out.println("checking false date: " + token.checkIssuedDate(LocalDate.of(2019, 1, 1)));

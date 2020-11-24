@@ -10,9 +10,13 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.KeyFactory;
 import java.security.PublicKey;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Scanner;
+
+import javax.rmi.ssl.SslRMIClientSocketFactory;
+import javax.rmi.ssl.SslRMIServerSocketFactory;
 
 import registrar.RegistrarInterface;
 import rmissl.RMISSLClientSocketFactory;
@@ -23,10 +27,10 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 
 	private static final long serialVersionUID = 1L;
 	private PublicKey registrarPubK;
-	private List<Capsule> capsules;
+	private List<Capsule> capsules = new ArrayList<>();
 
 	protected MixingProxyImplementation() throws Exception {
-		super(Values.MIXINGPROXY_PORT, new RMISSLClientSocketFactory(), new RMISSLServerSocketFactory());
+		//super(Values.MIXINGPROXY_PORT, new SslRMIClientSocketFactory(), new SslRMIServerSocketFactory());
 		try {
 			File file = new File(Values.FILE_DIR + "mixingproxy.csv");
 			Scanner scanner = new Scanner(file);
@@ -37,10 +41,10 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 
 			scanner.close();
 		} catch (FileNotFoundException e) {
-			Registry myRegistry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT,
-					new RMISSLClientSocketFactory());
+			Registry myRegistry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
 			RegistrarInterface registrar = (RegistrarInterface) myRegistry.lookup(Values.REGISTRAR_SERVICE);
 			registrarPubK = registrar.getPublicKey();
+			
 			// TODO info init.
 
 		}

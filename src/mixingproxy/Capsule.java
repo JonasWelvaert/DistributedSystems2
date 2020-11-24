@@ -1,11 +1,13 @@
 package mixingproxy;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import sharedclasses.Token;
 
-public class Capsule {
+public class Capsule implements Serializable {
 
+	private static final long serialVersionUID = 1L;
 	private LocalDateTime currentTime;
 	private Token userToken;
 	private String hash;

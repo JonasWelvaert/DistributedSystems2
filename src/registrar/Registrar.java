@@ -19,6 +19,14 @@ public class Registrar {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		/*
+		try {
+			new RegistrarImplementation();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}*/
 		System.out.println("| Registrar is ready.");
 	}
 

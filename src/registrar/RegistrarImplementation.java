@@ -46,6 +46,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	private KeyPair keyPair;
 
 	public RegistrarImplementation() throws RemoteException, NoSuchAlgorithmException {
+		//super(Values.REGISTRAR_PORT, new RMISSLClientSocketFactory(), new RMISSLServerSocketFactory());
 		try {
 			File file = new File(Values.FILE_DIR + "registrar.csv");
 			Scanner scanner = new Scanner(file);

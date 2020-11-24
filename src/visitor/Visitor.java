@@ -11,7 +11,6 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,7 +36,6 @@ import registrar.RegistrarInterface;
 import registrar.TokensAlreadyIssuedException;
 import registrar.UserAlreadyRegisteredException;
 import registrar.UserNotRegisteredException;
-import rmissl.RMISSLClientSocketFactory;
 import sharedclasses.Token;
 import values.Values;
 
@@ -238,8 +236,8 @@ public class Visitor extends Application {
 		try {
 			LocalDateTime entryTime = LocalDateTime.now();
 
-			Registry myRegistry = LocateRegistry.getRegistry(Values.MIXINGPROXY_HOSTNAME, Values.MIXINGPROXY_PORT,
-					new RMISSLClientSocketFactory());
+			Registry myRegistry = LocateRegistry.getRegistry(Values.MIXINGPROXY_HOSTNAME, Values.MIXINGPROXY_PORT/*,
+					new SslRMIClientSocketFactory()*/);
 			MixingProxyInterface mixingProxy = (MixingProxyInterface) myRegistry.lookup(Values.MIXINGPROXY_SERVICE);
 
 			List<Token> tokens = issuedTokens.get(entryTime.toLocalDate());

@@ -26,8 +26,12 @@ import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -36,6 +40,8 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import matchingservice.MatchingService;
+import matchingservice.MatchingServiceInterface;
 import registrar.RegistrarInterface;
 import values.Values;
 
@@ -112,6 +118,18 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		} catch (InvalidKeySpecException e) {
 			e.printStackTrace();
 		}
+		
+		//flusing capsules to matchingservice, everyday 3AM:
+		Calendar today = Calendar.getInstance();
+		today.set(Calendar.HOUR_OF_DAY, 3);
+		today.set(Calendar.MINUTE, 0);
+		today.set(Calendar.SECOND, 0);
+		Timer timer = new Timer();
+		timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				sendCapsulesToMatchingService();
+			}}, today.getTime(), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
 	}
 
 	private void updateFile() {
@@ -199,6 +217,33 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		}
 		return sign;
 
+	}
+	
+	private synchronized void sendCapsulesToMatchingService() {
+		try {
+			Registry myRegistry;
+			myRegistry = LocateRegistry.getRegistry(Values.MATCHINGSERVICE_HOSTNAME, Values.MATCHINGSERVICE_PORT);
+			MatchingServiceInterface matchingService = (MatchingServiceInterface) myRegistry.lookup(Values.MATCHINGSERVICE_SERVICE);
+			List<Capsule> capsulesToSend = new ArrayList<>();
+			List<Capsule> capsulesToHold = new ArrayList<>();
+			LocalDate today = LocalDate.now();
+			for(Capsule c: capsules) {
+				if(c.getCurrentTime().toLocalDate().isBefore(today)) {
+					capsulesToSend.add(c);
+				}else {
+					capsulesToHold.add(c);
+				}
+			}
+			capsules = capsulesToHold;
+			matchingService.submitCapsules(capsulesToSend);
+			updateFile();
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NotBoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

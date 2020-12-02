@@ -109,7 +109,7 @@ public class VisitorHomeController {
 
 			@Override
 			public void handle(ActionEvent event) {
-				//TODO alles
+				Visitor.endVisit();
 				apHorecaInformation.setVisible(false);
 				apHorecaForm.setVisible(true);
 			}

@@ -47,6 +47,7 @@ public class Visitor extends Application {
 	private static visitor.User user;
 	private static Map<LocalDate, List<Token>> issuedTokens = new HashMap<LocalDate, List<Token>>();
 	private static List<Capsule> capsules = new ArrayList<>();
+	private static Capsule lastCapsule = null;
 
 	private static Stage primaryStage;
 
@@ -278,7 +279,9 @@ public class Visitor extends Application {
 				capsule.setSign(signedHash);
 				token.setUsed(true);
 				capsules.add(capsule);
+				lastCapsule = capsule;
 			}
+			updateFile();
 			return signedHash;
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -287,6 +290,13 @@ public class Visitor extends Application {
 			e.printStackTrace();
 			return null;
 		}
+	}
+	
+	public static void endVisit() {
+		LocalDateTime now = LocalDateTime.now();
+		lastCapsule.setEndTime(now);
+		lastCapsule = null;
+		updateFile();
 	}
 
 }

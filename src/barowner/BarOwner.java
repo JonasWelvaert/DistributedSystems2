@@ -212,7 +212,7 @@ public class BarOwner extends Application {
 		return randomNumbers.get(ld);
 	}
 
-	public static String[] getQRCode(LocalDate ld) { // TODO: aanpassen
+	public static String[] getQRCode(LocalDate ld) { 
 		try {
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
 			String random = Integer.toString(getRandom(ld));

@@ -14,7 +14,7 @@
             <Button fx:id="buttonRegisterAtHoreca" mnemonicParsing="false" text="Register @HORECA" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="30.0" />
          </children>
       </AnchorPane>
-      <AnchorPane fx:id="apHorecaInformation" layoutX="8.0" layoutY="80.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="70.0">
+      <AnchorPane fx:id="apHorecaInformation" layoutX="8.0" layoutY="80.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0">
          <children>
             <Label text="You are visiting:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
             <Canvas fx:id="proofOfRegistration" height="300.0" layoutX="59.0" layoutY="63.0" width="300.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0" />

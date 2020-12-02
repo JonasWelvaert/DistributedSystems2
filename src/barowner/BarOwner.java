@@ -1,5 +1,6 @@
 package barowner;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -236,13 +237,13 @@ public class BarOwner extends Application {
 			}
 			fileName = Values.FILE_DIR + "barOwner_" + horecaName + ".csv";
 			File file = new File(fileName);
-			FileWriter fw;
 			file.createNewFile();
-			fw = new FileWriter(file);
-			fw.write(horecaName + System.lineSeparator());
-			fw.write(password + System.lineSeparator()); // TODO: password/file encrypteren
-			fw.write(horecaNumber + System.lineSeparator());
-			fw.write(address + System.lineSeparator());
+			BufferedWriter bw;
+			bw = new BufferedWriter(new FileWriter(file));
+			bw.write(horecaName + System.lineSeparator());
+			bw.write(password + System.lineSeparator()); // TODO: password/file encrypteren
+			bw.write(horecaNumber + System.lineSeparator());
+			bw.write(address + System.lineSeparator());
 			Gson gson = new GsonBuilder().registerTypeAdapter(LocalDate.class, new TypeAdapter<LocalDate>() {
 				@Override
 				public void write(JsonWriter jsonWriter, LocalDate localDate) throws IOException {
@@ -255,10 +256,10 @@ public class BarOwner extends Application {
 				}
 
 			}).create();
-			fw.write(gson.toJson(pseudonyms) + System.lineSeparator());
-			fw.write(gson.toJson(randomNumbers) + System.lineSeparator());
-			fw.flush();
-			fw.close();
+			bw.write(gson.toJson(pseudonyms) + System.lineSeparator());
+			bw.write(gson.toJson(randomNumbers) + System.lineSeparator());
+			bw.flush();
+			bw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(1);

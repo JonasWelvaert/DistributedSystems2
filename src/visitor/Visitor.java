@@ -1,5 +1,6 @@
 package visitor;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -11,6 +12,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +46,7 @@ public class Visitor extends Application {
 	private static String fileName;
 	private static visitor.User user;
 	private static Map<LocalDate, List<Token>> issuedTokens = new HashMap<LocalDate, List<Token>>();
+	private static List<Capsule> capsules = new ArrayList<>();
 
 	private static Stage primaryStage;
 
@@ -178,11 +182,14 @@ public class Visitor extends Application {
 				}
 
 			}).create();
-
 			Type tokenMapType = new TypeToken<Map<LocalDate, List<Token>>>() {
 			}.getType();
 			Visitor.issuedTokens = gson.fromJson(sc.nextLine(), tokenMapType);
 
+			// capsules opslaan
+			Type cListType = new TypeToken<List<Capsule>>() {
+			}.getType();
+			capsules = gson.fromJson(sc.nextLine(), cListType);
 			sc.close();
 			return true;
 		} catch (FileNotFoundException e) {
@@ -194,13 +201,18 @@ public class Visitor extends Application {
 
 	public static void updateFile() {
 		try {
+			File dir = new File(Values.FILE_DIR);
+			if (!dir.exists()) {
+				dir.mkdir();
+			}
 			File file = new File(fileName);
 			file.createNewFile();
-			FileWriter fw = new FileWriter(file);
+			BufferedWriter bw;
+			bw = new BufferedWriter(new FileWriter(file));
 
-			fw.write(Visitor.user.getUsn() + System.lineSeparator());
-			fw.write(Visitor.user.getPassw() + System.lineSeparator());
-			fw.write(Visitor.user.getPhoneNr() + System.lineSeparator());
+			bw.write(Visitor.user.getUsn() + System.lineSeparator());
+			bw.write(Visitor.user.getPassw() + System.lineSeparator());
+			bw.write(Visitor.user.getPhoneNr() + System.lineSeparator());
 
 			Gson gson = new GsonBuilder().registerTypeAdapter(LocalDate.class, new TypeAdapter<LocalDate>() {
 				@Override
@@ -215,10 +227,11 @@ public class Visitor extends Application {
 
 			}).create();
 
-			fw.write(gson.toJson(Visitor.issuedTokens) + System.lineSeparator());
+			bw.write(gson.toJson(Visitor.issuedTokens) + System.lineSeparator());
+			bw.write(gson.toJson(Visitor.capsules) + System.lineSeparator());
 
-			fw.flush();
-			fw.close();
+			bw.flush();
+			bw.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -232,12 +245,12 @@ public class Visitor extends Application {
 		return Visitor.issuedTokens;
 	}
 
-	public static byte[] registerVisit(String random, String barname, String hash) {
+	public static byte[] registerVisit(String random, String barname, String hash, LocalDateTime entryTime) {
 		try {
-			LocalDateTime entryTime = LocalDateTime.now();
-
-			Registry myRegistry = LocateRegistry.getRegistry(Values.MIXINGPROXY_HOSTNAME, Values.MIXINGPROXY_PORT/*,
-					new SslRMIClientSocketFactory()*/);
+			Registry myRegistry = LocateRegistry.getRegistry(Values.MIXINGPROXY_HOSTNAME,
+					Values.MIXINGPROXY_PORT/*
+											 * , new SslRMIClientSocketFactory()
+											 */);
 			MixingProxyInterface mixingProxy = (MixingProxyInterface) myRegistry.lookup(Values.MIXINGPROXY_SERVICE);
 
 			List<Token> tokens = issuedTokens.get(entryTime.toLocalDate());
@@ -258,11 +271,14 @@ public class Visitor extends Application {
 
 			Capsule capsule = new Capsule();
 			capsule.setCurrentTime(entryTime);
-			capsule.setHash(hash);
+			capsule.setHash(Base64.getDecoder().decode(hash));
 			capsule.setUserToken(token);
 			byte[] signedHash = mixingProxy.registerVisit(capsule);
-			// TODO:gegevens ook lokaal op phone opslaan.
-
+			if (signedHash != null) {
+				capsule.setSign(signedHash);
+				token.setUsed(true);
+				capsules.add(capsule);
+			}
 			return signedHash;
 		} catch (RemoteException e) {
 			e.printStackTrace();

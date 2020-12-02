@@ -131,4 +131,8 @@ public class Token implements Serializable {
 		}
 		System.out.println();
 	}
+	
+	public void setUsed(boolean used) {
+		this.used = used;
+	}
 }

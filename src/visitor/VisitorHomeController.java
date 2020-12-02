@@ -1,6 +1,7 @@
 package visitor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Base64;
@@ -77,23 +78,27 @@ public class VisitorHomeController {
 					String s1 = qrCodeContent.substring(1, qrCodeContent.length() - 1);// qrcode without [ and ]
 					String[] s2 = s1.split(", "); // array of strings from qrcode
 					if (s2.length == 3) {
-						byte[] signedhash = Visitor.registerVisit(s2[0], s2[1], s2[2]);
+						LocalDateTime entryTime = LocalDateTime.now();
+						byte[] signedhash = Visitor.registerVisit(s2[0], s2[1], s2[2], entryTime);
 						if (signedhash != null) {
 							String signedHashAsString = Base64.getEncoder().encodeToString(signedhash);
 							labelHorecaName.setText(s2[1]);
-							labelTimeOfRegistration.setText("12:00"/* TODO */);
+							labelTimeOfRegistration.setText(entryTime.toString());
 							setProofOfRegistration(signedHashAsString);
 							apHorecaInformation.setVisible(true);
 							apHorecaForm.setVisible(false);
 						} else {
+							//melding: Er is een probleem opgetreden bij het signen
 							apHorecaInformation.setVisible(false);
 							apHorecaForm.setVisible(true);
 						}
 					} else {
+						//melding invalid QR code
 						apHorecaInformation.setVisible(false);
 						apHorecaForm.setVisible(true);
 					}
 				} else {
+					//melding invalid QR code
 					apHorecaInformation.setVisible(false);
 					apHorecaForm.setVisible(true);
 				}

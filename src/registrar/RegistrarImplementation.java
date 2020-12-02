@@ -1,5 +1,6 @@
 package registrar;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
@@ -46,7 +47,8 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	private KeyPair keyPair;
 
 	public RegistrarImplementation() throws RemoteException, NoSuchAlgorithmException {
-		//super(Values.REGISTRAR_PORT, new RMISSLClientSocketFactory(), new RMISSLServerSocketFactory());
+		// super(Values.REGISTRAR_PORT, new RMISSLClientSocketFactory(), new
+		// RMISSLServerSocketFactory());
 		try {
 			File file = new File(Values.FILE_DIR + "registrar.csv");
 			Scanner scanner = new Scanner(file);
@@ -114,12 +116,16 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 
 	private void updateFile() {
 		try {
+			File dir = new File(Values.FILE_DIR);
+			if (!dir.exists()) {
+				dir.mkdir();
+			}
 			File file = new File(Values.FILE_DIR + "registrar.csv");
 			file.createNewFile();
-			FileWriter fw;
-			fw = new FileWriter(file);
+			BufferedWriter bw;
+			bw = new BufferedWriter(new FileWriter(file));
 
-			fw.write(Base64.getEncoder().encodeToString(secretKey) + System.lineSeparator());
+			bw.write(Base64.getEncoder().encodeToString(secretKey) + System.lineSeparator());
 
 			Gson gson = new GsonBuilder().registerTypeAdapter(LocalDate.class, new TypeAdapter<LocalDate>() {
 				@Override
@@ -133,19 +139,18 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 				}
 
 			}).create();
-			fw.write(gson.toJson(cateringFacilitys) + System.lineSeparator());
-
+			bw.write(gson.toJson(cateringFacilitys) + System.lineSeparator());
 			// KeyPair
-			fw.write(Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()) + System.lineSeparator());
-			fw.write(Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()) + System.lineSeparator());
+			bw.write(Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()) + System.lineSeparator());
+			bw.write(Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()) + System.lineSeparator());
 
 			// visitors
-			fw.write(gson.toJson(users) + System.lineSeparator());
+			bw.write(gson.toJson(users) + System.lineSeparator());
 
 			// TODO: info wegschrijven naar file.
 
-			fw.flush();
-			fw.close();
+			bw.flush();
+			bw.close();
 		} catch (IOException e) {
 			System.err.println("error in updateFile()-method.");
 			e.printStackTrace();
@@ -170,7 +175,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 		return map;
 	}
 
-	public Map<LocalDate, byte[]> getPseudonyms(String horecaNumber, String password, LocalDate ld) {
+	public synchronized Map<LocalDate, byte[]> getPseudonyms(String horecaNumber, String password, LocalDate ld) {
 		CateringFacility cateringfacility = null;
 		for (CateringFacility cf : cateringFacilitys) {
 			if (cf.hasHorecaNumber(horecaNumber) && cf.isCorrectPassword(password)) {

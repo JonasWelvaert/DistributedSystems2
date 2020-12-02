@@ -8,15 +8,16 @@ import sharedclasses.Token;
 public class Capsule implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-	private LocalDateTime currentTime;
-	private Token userToken;
-	private String hash;
+	private LocalDateTime currentTime = null;
+	private Token userToken = null;
+	private byte[] hash = null;
+	private byte[] sign = null;
 
 	public void setCurrentTime(LocalDateTime currentTime) {
 		this.currentTime = currentTime;
 	}
 
-	public void setHash(String hash) {
+	public void setHash(byte[] hash) {
 		this.hash = hash;
 	}
 
@@ -28,12 +29,20 @@ public class Capsule implements Serializable {
 		return currentTime;
 	}
 
-	public String getHash() {
+	public byte[] getHash() {
 		return hash;
 	}
 
 	public Token getUserToken() {
 		return userToken;
+	}
+	
+	public byte[] getSign() {
+		return sign;
+	}
+	
+	public void setSign(byte[] sign) {
+		this.sign = sign;
 	}
 
 }

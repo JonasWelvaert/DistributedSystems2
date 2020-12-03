@@ -24,6 +24,7 @@ import java.util.Scanner;
 import matchingservice.MatchingService;
 import mixingproxy.MixingProxy;
 import registrar.Registrar;
+import sharedclasses.FileTransferable;
 
 public class Test {
 
@@ -33,7 +34,7 @@ public class Test {
 		new Thread(() -> MatchingService.main(args)).run();
 		new Thread(() -> MixingProxy.main(args)).run();
 
-		testCopyToClipboard();
+		//testCopyToClipboard();
 
 	}
 
@@ -49,12 +50,7 @@ public class Test {
 
 		FileTransferable ft = new FileTransferable(listOfFiles);
 
-		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, new ClipboardOwner() {
-			@Override
-			public void lostOwnership(Clipboard clipboard, Transferable contents) {
-				System.out.println("Lost ownership");
-			}
-		});
+		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents)->{/*executed when your content is overwritten*/});
 
 		Object clipboardContent = Toolkit.getDefaultToolkit().getSystemClipboard()
 				.getData(DataFlavor.javaFileListFlavor);

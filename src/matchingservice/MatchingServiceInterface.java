@@ -5,7 +5,7 @@ import java.rmi.RemoteException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import mixingproxy.Capsule;
+import sharedclasses.Capsule;
 import sharedclasses.Log;
 
 public interface MatchingServiceInterface extends Remote {

@@ -33,12 +33,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
-import mixingproxy.Capsule;
 import mixingproxy.MixingProxyInterface;
 import registrar.RegistrarInterface;
 import registrar.TokensAlreadyIssuedException;
 import registrar.UserAlreadyRegisteredException;
 import registrar.UserNotRegisteredException;
+import sharedclasses.Capsule;
 import sharedclasses.Log;
 import sharedclasses.Token;
 import values.Values;
@@ -284,7 +284,7 @@ public class Visitor extends Application {
 				log.setHash(Base64.getDecoder().decode(hash));
 				log.setStartTime(capsule.getCurrentTime());
 				log.setToken(token);
-				//TODO log set endtime +30 min
+				log.setEndTime(capsule.getCurrentTime().plusMinutes(30));
 				//TODO elke 30 min nieuwe token sturen totdat endVisit geklikt.
 				logs.add(log);
 				lastLog = log;
@@ -305,6 +305,17 @@ public class Visitor extends Application {
 		lastLog.setEndTime(now);
 		lastLog = null;
 		updateFile();
+	}
+	
+	public static List<Log> getLogs() {
+		List<Log> ret = new ArrayList<>();
+		LocalDateTime fourteenDaysAgo = LocalDateTime.now().minusDays(14);
+		for(Log l: logs) {
+			if(l.getStartTime().isAfter(fourteenDaysAgo)) {
+				ret.add(l);
+			}
+		}
+		return ret;
 	}
 
 }

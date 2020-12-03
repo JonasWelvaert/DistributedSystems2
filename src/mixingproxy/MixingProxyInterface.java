@@ -4,6 +4,8 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.List;
 
+import sharedclasses.Capsule;
+
 public interface MixingProxyInterface extends Remote {
 	/**
 	 * @param capsule

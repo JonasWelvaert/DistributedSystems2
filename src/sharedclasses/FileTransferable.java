@@ -1,4 +1,4 @@
-package test;
+package sharedclasses;
 
 import java.util.List;
 import java.awt.datatransfer.DataFlavor;

@@ -41,6 +41,9 @@ public class BarOwnerInfoController {
 		ByteArrayInputStream in = new ByteArrayInputStream(out.toByteArray());
 		Image image = new Image(in);
 		qrCode.setImage(image);
+
+		ImageView imageView = new ImageView(new Image("/sharedclasses/clipboard.png", 20, 20, true, false));
+		copyToClipboard.setGraphic(imageView);
 		copyToClipboard.setOnAction(new EventHandler<ActionEvent>() {
 			@Override
 			public void handle(ActionEvent event) {

@@ -7,11 +7,12 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="visitor.VisitorHomeController">
    <children>
-      <AnchorPane fx:id="apHorecaForm">
+      <AnchorPane fx:id="apHorecaForm" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <Label text="Type here the QR-code content of the visited HORECA:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0" />
             <TextField fx:id="tfQrCodeContent" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="30.0" />
             <Button fx:id="buttonRegisterAtHoreca" mnemonicParsing="false" text="Register @HORECA" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="30.0" />
+            <Button fx:id="buttonShareLogs" mnemonicParsing="false" text="Share logs" AnchorPane.bottomAnchor="8.0" AnchorPane.rightAnchor="8.0" />
          </children>
       </AnchorPane>
       <AnchorPane fx:id="apHorecaInformation" layoutX="8.0" layoutY="80.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0">

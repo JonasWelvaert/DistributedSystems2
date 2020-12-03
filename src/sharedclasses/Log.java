@@ -1,8 +1,10 @@
 package sharedclasses;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class Log {
+public class Log implements Serializable {
+	private static final long serialVersionUID = 4206033057993352885L;
 	private LocalDateTime startTime;
 	private LocalDateTime endTime;
 	private Token token;

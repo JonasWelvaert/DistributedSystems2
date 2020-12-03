@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Scanner;
 
 import com.google.gson.Gson;
@@ -26,7 +25,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.AnchorPane;
 import sharedclasses.Log;
 
 public class DoctorUIController {
@@ -102,6 +100,12 @@ public class DoctorUIController {
 	}
 
 	public void updateLayout() {
-		labelNrOfPatients.setText(Integer.toString(Doctor.getNrOfUnsendPatients()));
+		int nrOfUnsendPatients = Doctor.getNrOfUnsendPatients();
+		labelNrOfPatients.setText(Integer.toString(nrOfUnsendPatients));
+		if(nrOfUnsendPatients<=0) {
+			buttonSendInformation.setDisable(true);
+		}else {
+			buttonSendInformation.setDisable(false);
+		}
 	}
 }

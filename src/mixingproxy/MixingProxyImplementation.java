@@ -43,6 +43,7 @@ import com.google.gson.stream.JsonWriter;
 import matchingservice.MatchingService;
 import matchingservice.MatchingServiceInterface;
 import registrar.RegistrarInterface;
+import sharedclasses.Capsule;
 import values.Values;
 
 public class MixingProxyImplementation extends UnicastRemoteObject implements MixingProxyInterface {

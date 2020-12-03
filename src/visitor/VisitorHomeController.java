@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.ArrayList;
@@ -27,9 +28,11 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -96,6 +99,7 @@ public class VisitorHomeController {
 			@Override
 			public void handle(ActionEvent event) {
 				String qrCodeContent = tfQrCodeContent.getText();
+				tfQrCodeContent.setText("");
 				if (qrCodeContent != null && !qrCodeContent.equals("")) {
 					String s1 = qrCodeContent.substring(1, qrCodeContent.length() - 1);// qrcode without [ and ]
 					String[] s2 = s1.split(", "); // array of strings from qrcode
@@ -105,22 +109,34 @@ public class VisitorHomeController {
 						if (signedhash != null) {
 							String signedHashAsString = Base64.getEncoder().encodeToString(signedhash);
 							labelHorecaName.setText(s2[1]);
-							labelTimeOfRegistration.setText(entryTime.toString());
+							labelTimeOfRegistration.setText(DateTimeFormatter.ofPattern("HH:mm").format(entryTime));
 							setProofOfRegistration(signedHashAsString);
 							apHorecaInformation.setVisible(true);
 							apHorecaForm.setVisible(false);
 						} else {
-							// melding: Er is een probleem opgetreden bij het signen
+							Alert alert = new Alert(AlertType.WARNING);
+							alert.setTitle("Registration failed!");
+							alert.setHeaderText("Registration failed.");
+							alert.setContentText("Something wrong happend. Plaese try again!");
+							alert.showAndWait();
 							apHorecaInformation.setVisible(false);
 							apHorecaForm.setVisible(true);
 						}
 					} else {
-						// melding invalid QR code
+						Alert alert = new Alert(AlertType.WARNING);
+						alert.setTitle("Registration failed!");
+						alert.setHeaderText("QR code failed.");
+						alert.setContentText("Make sure you scan the correct QR code!");
+						alert.showAndWait();
 						apHorecaInformation.setVisible(false);
 						apHorecaForm.setVisible(true);
 					}
 				} else {
-					// melding invalid QR code
+					Alert alert = new Alert(AlertType.WARNING);
+					alert.setTitle("Registration failed!");
+					alert.setHeaderText("QR code failed.");
+					alert.setContentText("Make sure you scan the correct QR code!");
+					alert.showAndWait();
 					apHorecaInformation.setVisible(false);
 					apHorecaForm.setVisible(true);
 				}
@@ -136,6 +152,7 @@ public class VisitorHomeController {
 				apHorecaForm.setVisible(true);
 			}
 		});
+		
 		ImageView imageView = new ImageView(new Image("/sharedclasses/clipboard.png", 20, 20, true, false));
 		buttonShareLogs.setGraphic(imageView);
 		buttonShareLogs.setOnAction(new EventHandler<ActionEvent>() {
@@ -173,7 +190,11 @@ public class VisitorHomeController {
 					});
 
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
+					Alert alert = new Alert(AlertType.WARNING);
+					alert.setTitle("Sharing logs failed!");
+					alert.setHeaderText("Sharing logs failed.");
+					alert.setContentText("Please contact the app developers, Internal Server Error detected.");
+					alert.showAndWait();
 					e.printStackTrace();
 				}
 			}

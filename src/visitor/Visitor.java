@@ -12,12 +12,17 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -80,7 +85,6 @@ public class Visitor extends Application {
 			primaryStage.setScene(scene);
 			primaryStage.show();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
@@ -119,6 +123,11 @@ public class Visitor extends Application {
 				return null;
 			}
 		} catch (RemoteException | NotBoundException e) {
+			Alert alert = new Alert(AlertType.WARNING);
+			alert.setTitle("Token allocation failed!");
+			alert.setHeaderText("Token allocation failed.");
+			alert.setContentText("Please contact the app developers, Internal Server Error detected.");
+			alert.showAndWait();
 			System.err.println("error connecting to the registrar");
 			e.printStackTrace();
 			return null;
@@ -195,6 +204,11 @@ public class Visitor extends Application {
 			sc.close();
 			return true;
 		} catch (FileNotFoundException e) {
+			Alert alert = new Alert(AlertType.WARNING);
+			alert.setTitle("Login failed!");
+			alert.setHeaderText("Login failed.");
+			alert.setContentText("You first have to register your phonenumber before logging in.");
+			alert.showAndWait();
 			System.out.println("file not found...");
 			e.printStackTrace();
 			return false;
@@ -235,6 +249,11 @@ public class Visitor extends Application {
 			bw.flush();
 			bw.close();
 		} catch (IOException e) {
+			Alert alert = new Alert(AlertType.WARNING);
+			alert.setTitle("Data storing failed!");
+			alert.setHeaderText("Data storing failed.");
+			alert.setContentText("Please contact the app developers, Internal Server Error detected.");
+			alert.showAndWait();
 			e.printStackTrace();
 		}
 	}
@@ -285,33 +304,45 @@ public class Visitor extends Application {
 				log.setStartTime(capsule.getCurrentTime());
 				log.setToken(token);
 				log.setEndTime(capsule.getCurrentTime().plusMinutes(30));
-				//TODO elke 30 min nieuwe token sturen totdat endVisit geklikt.
 				logs.add(log);
 				lastLog = log;
+
+				// elke 30 min nieuwe token sturen totdat endVisit geklikt.
+				Date date = Date.from(lastLog.getEndTime().atZone(ZoneId.systemDefault()).toInstant());
+				Timer timer = new Timer();
+				timer.schedule(new TimerTask() {
+					@Override
+					public void run() {
+						registerVisit(random, barname, hash, lastLog.getEndTime());
+					}
+				}, date, TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES));
+
 			}
 			updateFile();
 			return signedHash;
-		} catch (RemoteException e) {
+		} catch (RemoteException | NotBoundException e) {
+			Alert alert = new Alert(AlertType.WARNING);
+			alert.setTitle("Registrar failed!");
+			alert.setHeaderText("Registrar failed.");
+			alert.setContentText("Please contact the app developers, Internal Server Error detected.");
+			alert.showAndWait();
 			e.printStackTrace();
 			return null;
-		} catch (NotBoundException e) {
-			e.printStackTrace();
-			return null;
-		}
+		} 
 	}
-	
+
 	public static void endVisit() {
 		LocalDateTime now = LocalDateTime.now();
 		lastLog.setEndTime(now);
 		lastLog = null;
 		updateFile();
 	}
-	
+
 	public static List<Log> getLogs() {
 		List<Log> ret = new ArrayList<>();
 		LocalDateTime fourteenDaysAgo = LocalDateTime.now().minusDays(14);
-		for(Log l: logs) {
-			if(l.getStartTime().isAfter(fourteenDaysAgo)) {
+		for (Log l : logs) {
+			if (l.getStartTime().isAfter(fourteenDaysAgo)) {
 				ret.add(l);
 			}
 		}

@@ -21,6 +21,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import mixingproxy.Capsule;
+import sharedclasses.Log;
 import values.Values;
 
 public class MatchingServiceImplementation extends UnicastRemoteObject implements MatchingServiceInterface {
@@ -114,7 +115,7 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 	}
 
 	@Override
-	public void submitLogs(List<byte[]> medicalLogs) {
+	public void submitLogs(List<Log> medicalLogs) {
 		// TODO Auto-generated method stub
 
 	}

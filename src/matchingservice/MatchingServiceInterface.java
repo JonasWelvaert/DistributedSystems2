@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import mixingproxy.Capsule;
+import sharedclasses.Log;
 
 public interface MatchingServiceInterface extends Remote {
 	public void submitCapsules(List<Capsule> capsules) throws RemoteException;
@@ -15,7 +16,7 @@ public interface MatchingServiceInterface extends Remote {
 	public List<Tuple> requestInfectedCapsules() throws RemoteException;
 
 	// temp
-	public void submitLogs(List<byte[]> medicalLogs) throws RemoteException;
+	public void submitLogs(List<Log> medicalLogs) throws RemoteException;
 }
 
 

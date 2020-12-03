@@ -39,6 +39,7 @@ import registrar.RegistrarInterface;
 import registrar.TokensAlreadyIssuedException;
 import registrar.UserAlreadyRegisteredException;
 import registrar.UserNotRegisteredException;
+import sharedclasses.Log;
 import sharedclasses.Token;
 import values.Values;
 
@@ -46,8 +47,8 @@ public class Visitor extends Application {
 	private static String fileName;
 	private static visitor.User user;
 	private static Map<LocalDate, List<Token>> issuedTokens = new HashMap<LocalDate, List<Token>>();
-	private static List<Capsule> capsules = new ArrayList<>();
-	private static Capsule lastCapsule = null;
+	private static List<Log> logs = new ArrayList<>();
+	private static Log lastLog = null;
 
 	private static Stage primaryStage;
 
@@ -188,9 +189,9 @@ public class Visitor extends Application {
 			Visitor.issuedTokens = gson.fromJson(sc.nextLine(), tokenMapType);
 
 			// capsules opslaan
-			Type cListType = new TypeToken<List<Capsule>>() {
+			Type lListType = new TypeToken<List<Log>>() {
 			}.getType();
-			capsules = gson.fromJson(sc.nextLine(), cListType);
+			logs = gson.fromJson(sc.nextLine(), lListType);
 			sc.close();
 			return true;
 		} catch (FileNotFoundException e) {
@@ -229,7 +230,7 @@ public class Visitor extends Application {
 			}).create();
 
 			bw.write(gson.toJson(Visitor.issuedTokens) + System.lineSeparator());
-			bw.write(gson.toJson(Visitor.capsules) + System.lineSeparator());
+			bw.write(gson.toJson(Visitor.logs) + System.lineSeparator());
 
 			bw.flush();
 			bw.close();
@@ -278,8 +279,15 @@ public class Visitor extends Application {
 			if (signedHash != null) {
 				capsule.setSign(signedHash);
 				token.setUsed(true);
-				capsules.add(capsule);
-				lastCapsule = capsule;
+				Log log = new Log();
+				log.setRandom(Integer.parseInt(random));
+				log.setHash(Base64.getDecoder().decode(hash));
+				log.setStartTime(capsule.getCurrentTime());
+				log.setToken(token);
+				//TODO log set endtime +30 min
+				//TODO elke 30 min nieuwe token sturen totdat endVisit geklikt.
+				logs.add(log);
+				lastLog = log;
 			}
 			updateFile();
 			return signedHash;
@@ -294,8 +302,8 @@ public class Visitor extends Application {
 	
 	public static void endVisit() {
 		LocalDateTime now = LocalDateTime.now();
-		lastCapsule.setEndTime(now);
-		lastCapsule = null;
+		lastLog.setEndTime(now);
+		lastLog = null;
 		updateFile();
 	}
 

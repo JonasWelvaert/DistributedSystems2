@@ -10,6 +10,8 @@ import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -39,7 +41,7 @@ public class Test {
 	}
 
 	private static void testCopyToClipboard() throws IOException, HeadlessException, UnsupportedFlavorException {
-		File file = new File("helloWorld.txt");
+		File file = File.createTempFile("logs", ".txt");
 		file.createNewFile();
 		FileWriter fw = new FileWriter(file);
 		fw.write("Hello world!");
@@ -50,8 +52,11 @@ public class Test {
 
 		FileTransferable ft = new FileTransferable(listOfFiles);
 
-		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents)->{/*executed when your content is overwritten*/});
+		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(ft, (clipboard, contents) -> {
+			/* executed when your content is overwritten */});
 
+		//file.delete();
+		
 		Object clipboardContent = Toolkit.getDefaultToolkit().getSystemClipboard()
 				.getData(DataFlavor.javaFileListFlavor);
 		if (clipboardContent instanceof List) {

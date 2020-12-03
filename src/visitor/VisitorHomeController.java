@@ -143,7 +143,7 @@ public class VisitorHomeController {
 			@Override
 			public void handle(ActionEvent event) {
 				try {
-					File file = new File("logs.txt");
+					File file = File.createTempFile("logs", ".txt");
 					file.createNewFile();
 					FileWriter fw = new FileWriter(file);
 					Gson gson = new GsonBuilder().registerTypeAdapter(LocalDate.class, new TypeAdapter<LocalDate>() {

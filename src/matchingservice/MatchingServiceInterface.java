@@ -2,6 +2,7 @@ package matchingservice;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
+import java.security.SignedObject;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,7 +17,7 @@ public interface MatchingServiceInterface extends Remote {
 	public List<Tuple> requestInfectedCapsules() throws RemoteException;
 
 	// temp
-	public void submitLogs(List<Log> medicalLogs) throws RemoteException;
+	public void submitLogs(List<SignedObject> medicalLogs) throws RemoteException;
 }
 
 

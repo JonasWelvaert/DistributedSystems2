@@ -1,5 +1,7 @@
 package mixingproxy;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -33,6 +35,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -53,7 +58,7 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 	private List<Capsule> capsules = new ArrayList<>();
 	private KeyPair keyPair;
 
-	protected MixingProxyImplementation() throws RemoteException{
+	protected MixingProxyImplementation() throws RemoteException {
 		// super(Values.MIXINGPROXY_PORT, new SslRMIClientSocketFactory(), new
 		// SslRMIServerSocketFactory());
 		try {
@@ -63,7 +68,7 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 			KeyFactory keyFactory = KeyFactory.getInstance("DSA");
 			X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
 			registrarPubK = keyFactory.generatePublic(pubSpec);
-			
+
 			// eigen KeyPair
 			keyFactory = KeyFactory.getInstance("RSA");
 			PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
@@ -119,8 +124,8 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		} catch (InvalidKeySpecException e) {
 			e.printStackTrace();
 		}
-		
-		//flusing capsules to matchingservice, everyday 3AM:
+
+		// flusing capsules to matchingservice, everyday 3AM:
 		Calendar today = Calendar.getInstance();
 		today.set(Calendar.HOUR_OF_DAY, 3);
 		today.set(Calendar.MINUTE, 0);
@@ -130,7 +135,23 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 			@Override
 			public void run() {
 				sendCapsulesToMatchingService();
-			}}, today.getTime(), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
+			}
+		}, today.getTime(), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
+
+		JFrame f = new JFrame();
+		JButton button = new JButton("Flush capsules to mixing service");
+		button.setBounds(130,100,150,40);
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				sendCapsulesToMatchingService();
+			}
+		});
+		f.add(button);
+		f.setSize(400,500);
+		f.setLayout(null);
+		f.setVisible(true);
 	}
 
 	private void updateFile() {
@@ -179,8 +200,9 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		if (!capsule.getUserToken().checkSignature(registrarPubK)) {
 			return sign;
 		}
-		//Jonas: Hier gebruik ik de MixingProxy time zodat visitor Eve niet kan liegen over de datum.
-		//LocalDate date = capsule.getCurrentTime().toLocalDate();
+		// Jonas: Hier gebruik ik de MixingProxy time zodat visitor Eve niet kan liegen
+		// over de datum.
+		// LocalDate date = capsule.getCurrentTime().toLocalDate();
 		LocalDate date = LocalDate.now();
 		if (!capsule.getUserToken().checkIssuedDate(date)) {
 			return sign;
@@ -195,7 +217,6 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 			capsules.add(capsule);
 			updateFile();
 		}
-		// TODO in other method: pushing capsules randomly to matching service.
 		return sign;
 	}
 
@@ -219,30 +240,17 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		return sign;
 
 	}
-	
+
 	private synchronized void sendCapsulesToMatchingService() {
 		try {
 			Registry myRegistry;
 			myRegistry = LocateRegistry.getRegistry(Values.MATCHINGSERVICE_HOSTNAME, Values.MATCHINGSERVICE_PORT);
-			MatchingServiceInterface matchingService = (MatchingServiceInterface) myRegistry.lookup(Values.MATCHINGSERVICE_SERVICE);
-			List<Capsule> capsulesToSend = new ArrayList<>();
-			List<Capsule> capsulesToHold = new ArrayList<>();
-			LocalDate today = LocalDate.now();
-			for(Capsule c: capsules) {
-				if(c.getCurrentTime().toLocalDate().isBefore(today)) {
-					capsulesToSend.add(c);
-				}else {
-					capsulesToHold.add(c);
-				}
-			}
-			capsules = capsulesToHold;
-			matchingService.submitCapsules(capsulesToSend);
+			MatchingServiceInterface matchingService = (MatchingServiceInterface) myRegistry
+					.lookup(Values.MATCHINGSERVICE_SERVICE);
+			matchingService.submitCapsules(capsules);
+			capsules.clear();
 			updateFile();
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NotBoundException e) {
-			// TODO Auto-generated catch block
+		} catch (RemoteException | NotBoundException e) {
 			e.printStackTrace();
 		}
 	}

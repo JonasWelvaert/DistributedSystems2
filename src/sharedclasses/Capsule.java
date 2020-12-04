@@ -10,6 +10,8 @@ public class Capsule implements Serializable {
 	private Token userToken = null;
 	private byte[] hash = null;
 	private byte[] sign = null;
+	private boolean critical = false;
+	private boolean informed = false;
 
 	public void setCurrentTime(LocalDateTime currentTime) {
 		this.currentTime = currentTime;
@@ -43,4 +45,19 @@ public class Capsule implements Serializable {
 		this.sign = sign;
 	}
 
+	public boolean isCritical() {
+		return critical;
+	}
+	
+	public boolean isInformed() {
+		return informed;
+	}
+	
+	public void setCritical(boolean critical) {
+		this.critical = critical;
+	}
+	
+	public void setInformed(boolean informed) {
+		this.informed = informed;
+	}
 }

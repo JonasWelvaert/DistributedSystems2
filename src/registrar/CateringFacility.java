@@ -74,5 +74,9 @@ public class CateringFacility {
 	public boolean isCorrectPassword(String password) {
 		return this.password.equals(password);
 	}
+	
+	public String getHorecaName() {
+		return horecaName;
+	}
 
 }

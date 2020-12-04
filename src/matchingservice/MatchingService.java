@@ -39,7 +39,7 @@ public class MatchingService {
 		 * try { new MixingProxyImplementation(); } catch (Exception e) {
 		 * e.printStackTrace(); }
 		 */
-		System.out.println("| Matching Servide is ready.");
+		System.out.println("| Matching Service is ready.");
 
 	}
 }

@@ -251,4 +251,23 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	public synchronized PublicKey getPublicKey() throws RemoteException {
 		return keyPair.getPublic();
 	}
+
+	@Override
+	public List<byte[]> getPseudonymsForDay(LocalDate date) throws RemoteException {
+		List<byte[]> ret = new ArrayList<>();
+		for (CateringFacility cf : cateringFacilitys) {
+			ret.add(cf.getPseudonym(date, secretKey));
+		}
+		return ret;
+	}
+
+	@Override
+	public byte[] getPseudonymAsInspector(String CF, LocalDate date) {
+		for (CateringFacility cf : cateringFacilitys) {
+			if (cf.getHorecaName().equals(CF)) {
+				return cf.getPseudonym(date, secretKey);
+			}
+		}
+		return null;
+	}
 }

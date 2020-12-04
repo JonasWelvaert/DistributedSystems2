@@ -49,4 +49,8 @@ public interface RegistrarInterface extends Remote {
 
 	public Map<LocalDate, byte[]> getPseudonyms(String horecaNumber, String password, LocalDate ld)
 			throws RemoteException;
+	
+	public List<byte[]> getPseudonymsForDay(LocalDate date) throws RemoteException;
+
+	public byte[] getPseudonymAsInspector(String string, LocalDate date) throws RemoteException;
 }

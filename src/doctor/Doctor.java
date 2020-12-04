@@ -10,12 +10,16 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
+import java.security.SignedObject;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
@@ -47,7 +51,8 @@ public class Doctor extends Application {
 
 	private static int nrOfDoctor = 1;
 	private static int nrOfUnsendPatients;
-	private static List<Log> logs;
+	private static List<SignedObject> logs;
+	private static KeyPair keyPair;
 
 	public static void main(String[] args) {
 		try {
@@ -68,17 +73,36 @@ public class Doctor extends Application {
 				}
 
 			}).create();
-			Type lListType = new TypeToken<List<Log>>() {
+			Type lListType = new TypeToken<List<SignedObject>>() {
 			}.getType();
 			logs = gson.fromJson(scanner.nextLine(), lListType);
+
+			// eigen KeyPair
+			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+			PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
+			PrivateKey privkey = keyFactory.generatePrivate(privSpec);
+			X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
+			PublicKey pubkey = keyFactory.generatePublic(pubSpec);
+			keyPair = new KeyPair(pubkey, privkey);
+
 			// TODO info inlezen.
 
 			scanner.close();
 		} catch (FileNotFoundException e) {
-			nrOfDoctor = 1;
-			nrOfUnsendPatients = 0;
-			logs = new ArrayList<Log>();
-			// TODO info init.
+			try {
+				nrOfDoctor = 1;
+				nrOfUnsendPatients = 0;
+				logs = new ArrayList<SignedObject>();
+				KeyPairGenerator kpg;
+				kpg = KeyPairGenerator.getInstance("RSA");
+				keyPair = kpg.generateKeyPair();
+				// TODO info init.
+
+			} catch (NoSuchAlgorithmException e1) {
+				e1.printStackTrace();
+			}
+		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+			e.printStackTrace();
 		}
 		launch(args);
 	}
@@ -126,6 +150,10 @@ public class Doctor extends Application {
 			}).create();
 			bw.write(gson.toJson(logs) + System.lineSeparator());
 
+			// KeyPair
+			bw.write(Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()) + System.lineSeparator());
+			bw.write(Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()) + System.lineSeparator());
+
 			// TODO: info wegschrijven
 			bw.flush();
 			bw.close();
@@ -144,9 +172,19 @@ public class Doctor extends Application {
 	}
 
 	public static void receiveLogs(List<Log> logs) {
-		Doctor.logs.addAll(logs);
-		nrOfUnsendPatients++;
-		updateFile();
+		try {
+			 
+			for (Log l : logs) {
+				Signature signature = Signature.getInstance("SHA256withRSA");
+				SignedObject signedObject = new SignedObject(l,keyPair.getPrivate(),signature);
+				Doctor.logs.add(signedObject);
+				
+			}
+			nrOfUnsendPatients++;
+			updateFile();
+		} catch (InvalidKeyException | NoSuchAlgorithmException | SignatureException | IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public static void submitLogs() {
@@ -156,8 +194,7 @@ public class Doctor extends Application {
 			MatchingServiceInterface matchingService = (MatchingServiceInterface) registry
 					.lookup(Values.MATCHINGSERVICE_SERVICE);
 			matchingService.submitLogs(logs);
-			// TODO logs submitten
-
+			logs.clear();
 			nrOfUnsendPatients = 0;
 			updateFile();
 		} catch (RemoteException | NotBoundException e) {
@@ -165,4 +202,5 @@ public class Doctor extends Application {
 		}
 
 	}
+
 }

@@ -301,8 +301,9 @@ public class Visitor extends Application {
 				Log log = new Log();
 				log.setRandom(Integer.parseInt(random));
 				log.setHash(Base64.getDecoder().decode(hash));
-				log.setStartTime(capsule.getCurrentTime());
 				log.setToken(token);
+				log.setBarname(barname);
+				log.setStartTime(capsule.getCurrentTime());
 				log.setEndTime(capsule.getCurrentTime().plusMinutes(30));
 				logs.add(log);
 				lastLog = log;
@@ -313,7 +314,10 @@ public class Visitor extends Application {
 				timer.schedule(new TimerTask() {
 					@Override
 					public void run() {
-						registerVisit(random, barname, hash, lastLog.getEndTime());
+						if (lastLog == log) {
+							registerVisit(random, barname, hash, log.getEndTime());
+						}
+						this.cancel();
 					}
 				}, date, TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES));
 
@@ -328,7 +332,7 @@ public class Visitor extends Application {
 			alert.showAndWait();
 			e.printStackTrace();
 			return null;
-		} 
+		}
 	}
 
 	public static void endVisit() {

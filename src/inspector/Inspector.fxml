@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="inspector.InspectorController">
+   <children>
+      <TextField fx:id="tfQRCode" layoutX="14.0" layoutY="14.0" promptText="QR code" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="8.0" />
+      <Button fx:id="buttonCheckValidity" layoutX="206.0" layoutY="8.0" mnemonicParsing="false" text="Check validity" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="8.0" />
+      <Label fx:id="labelValidity" layoutX="8.0" layoutY="46.0" text="This QR code is valid!" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="50.0" />
+   </children>
+</AnchorPane>

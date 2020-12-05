@@ -46,9 +46,14 @@ public class Inspector extends Application {
 			Registry registry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
 			RegistrarInterface registrar = (RegistrarInterface) registry.lookup(Values.REGISTRAR_SERVICE);
 			LocalDate date = LocalDate.now();
+			if(qrCode.length()<3) {
+				return false;
+			}
 			String s1 = qrCode.substring(1, qrCode.length() - 1);// qrcode without [ and ]
 			String[] s2 = s1.split(", "); // 0: random, 1: name, 2: hash
-
+			if(s2.length!=3) {
+				return false;
+			}
 			MessageDigest md = MessageDigest.getInstance("SHA-256");
 			String random = s2[0];
 			byte[] pseudonym = registrar.getPseudonymAsInspector(s2[1], date);
@@ -64,6 +69,8 @@ public class Inspector extends Application {
 		} catch (RemoteException | NotBoundException | NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}catch(ArrayIndexOutOfBoundsException aioobe) {
+			return false;
 		}
 		return false;
 	}

@@ -60,8 +60,6 @@ public class Inspector extends Application {
 			if (pseudonym != null) {
 				String input = random + Base64.getEncoder().encodeToString(pseudonym);
 				byte[] gehashed = md.digest(input.getBytes());
-				System.out.println(s2[2]);
-				System.out.println(Base64.getEncoder().encodeToString(gehashed));
 				if (Arrays.equals(gehashed, Base64.getDecoder().decode(s2[2]))) {
 					return true;
 				}

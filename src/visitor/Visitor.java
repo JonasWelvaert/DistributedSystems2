@@ -57,7 +57,7 @@ public class Visitor extends Application {
 	private static List<Log> logs = new ArrayList<>();
 	private static Log lastLog = null;
 	
-	private static List<Alert> pastAlerts;
+	private static List<String> pastAlerts = new ArrayList<>();
 
 	private static Stage primaryStage;
 
@@ -205,6 +205,12 @@ public class Visitor extends Application {
 			Type lListType = new TypeToken<List<Log>>() {
 			}.getType();
 			logs = gson.fromJson(sc.nextLine(), lListType);
+			
+			//alert record
+			Type alertListType = new TypeToken<List<String>>() {
+			}.getType();
+			Visitor.pastAlerts = gson.fromJson(sc.nextLine(), alertListType);
+			
 			sc.close();
 			return true;
 		} catch (FileNotFoundException e) {
@@ -249,6 +255,7 @@ public class Visitor extends Application {
 
 			bw.write(gson.toJson(Visitor.issuedTokens) + System.lineSeparator());
 			bw.write(gson.toJson(Visitor.logs) + System.lineSeparator());
+			bw.write(gson.toJson(Visitor.pastAlerts) + System.lineSeparator());
 
 			bw.flush();
 			bw.close();
@@ -411,7 +418,7 @@ public class Visitor extends Application {
 					sb.append(cateringName);
 					sb.append("\n");
 					alert.setContentText(sb.toString());
-					pastAlerts.add(alert);
+					pastAlerts.add(sb.toString());
 					alert.showAndWait();
 				}
 			}
@@ -420,12 +427,14 @@ public class Visitor extends Application {
 				//only send if any matches were found
 				mixingProxy.acknowledge(tokensToSend);
 			}
+			
+			updateFile();
 		} catch (RemoteException | NotBoundException e) {
 			e.printStackTrace();
 		}
 	}
 	
-	public static List<Alert> getAlerts() {
+	public static List<String> getAlerts() {
 		return Visitor.pastAlerts;
 	}
 }

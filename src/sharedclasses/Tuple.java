@@ -1,11 +1,12 @@
 package sharedclasses;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 
-public class Tuple {
+public class Tuple implements Serializable{
 	private byte[] cateringHash;
 	private LocalDateTime t_start;
 	private LocalDateTime t_stop;

@@ -94,6 +94,7 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 		}
 		
 		JFrame f = new JFrame();
+		f.setTitle("Matching Service");
 		JButton button = new JButton("Flush critical capsules to Registrar.");
 		button.setBounds(130,100,150,40);
 		button.addActionListener(new ActionListener() {

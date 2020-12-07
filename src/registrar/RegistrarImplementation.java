@@ -256,6 +256,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			LocalDate ld = caps.getCurrentTime().toLocalDate();
 			String random = Integer.toString(getRandom(ld));
 			
+			/*
 			CateringFacility catf = null;
 			for(CateringFacility cf : this.cateringFacilitys) {
 				String pseudonym = Base64.getEncoder().encodeToString(cf.getPseudonymForDate(ld));
@@ -274,6 +275,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			if(catf == null) {
 				throw new SystemException("Unable to identify Catering Facility.");
 			}
+			*/
 			
 			//construct info-string
 			StringBuilder sb = new StringBuilder();
@@ -281,14 +283,21 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			sb.append(user.getPhoneNumber());
 			sb.append(" was put at risk of infection on ");
 			sb.append(caps.getCurrentTime().toLocalDate().toString());
+			/*
 			sb.append(" in catering facility ");
 			sb.append(catf.getHorecaName());
-			sb.append("\n");
+			*/
+			sb.append(".\n");
 			result.add(sb.toString());
+			
 		}
 		//create a file for this date
 		try {
-			BufferedWriter writer = new BufferedWriter(new FileWriter("/toNotify/" + LocalDate.now().toString() + ".txt"));
+			File file = new File(Values.FILE_DIR, "toNotify/" + LocalDate.now().toString() + ".txt");
+			file.createNewFile();
+			FileWriter fw = new FileWriter(file);
+			BufferedWriter writer = new BufferedWriter(fw);
+			
 			for(String s: result) {
 				writer.write(s);
 			}

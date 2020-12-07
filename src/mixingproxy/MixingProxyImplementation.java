@@ -65,16 +65,12 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		try {
 			File file = new File(Values.FILE_DIR + "mixingproxy.csv");
 			Scanner scanner = new Scanner(file);
-			// Rigistrar public key
-			KeyFactory keyFactory = KeyFactory.getInstance("DSA");
-			X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
-			registrarPubK = keyFactory.generatePublic(pubSpec);
 
 			// eigen KeyPair
-			keyFactory = KeyFactory.getInstance("RSA");
+			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 			PKCS8EncodedKeySpec privSpec = new PKCS8EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
 			PrivateKey privkey = keyFactory.generatePrivate(privSpec);
-			pubSpec = new X509EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
+			X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(Base64.getDecoder().decode(scanner.nextLine()));
 			PublicKey pubkey = keyFactory.generatePublic(pubSpec);
 			keyPair = new KeyPair(pubkey, privkey);
 
@@ -125,6 +121,15 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		} catch (InvalidKeySpecException e) {
 			e.printStackTrace();
 		}
+		
+		// Registrar public key
+		try {
+			Registry myRegistry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
+			RegistrarInterface registrar = (RegistrarInterface) myRegistry.lookup(Values.REGISTRAR_SERVICE);
+			registrarPubK = registrar.getPublicKey();
+		} catch (NotBoundException e1) {
+			e1.printStackTrace();
+		}
 
 		// flusing capsules to matchingservice, everyday 3AM:
 		Calendar today = Calendar.getInstance();
@@ -140,6 +145,7 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		}, today.getTime(), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
 
 		JFrame f = new JFrame();
+		f.setTitle("Mixing Proxy");
 		JButton button = new JButton("Flush capsules to mixing service");
 		button.setBounds(130,100,150,40);
 		button.addActionListener(new ActionListener() {
@@ -165,7 +171,6 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 			file.createNewFile();
 			BufferedWriter bw;
 			bw = new BufferedWriter(new FileWriter(file));
-			bw.write(Base64.getEncoder().encodeToString(registrarPubK.getEncoded()) + System.lineSeparator());
 			// KeyPair
 			bw.write(Base64.getEncoder().encodeToString(keyPair.getPrivate().getEncoded()) + System.lineSeparator());
 			bw.write(Base64.getEncoder().encodeToString(keyPair.getPublic().getEncoded()) + System.lineSeparator());
@@ -199,6 +204,7 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 	public byte[] registerVisit(Capsule capsule) {
 		byte[] sign = null;
 		if (!capsule.getUserToken().checkSignature(registrarPubK)) {
+			System.out.println("MixingProxy || registervisit | signature error.");
 			return sign;
 		}
 		// Jonas: Hier gebruik ik de MixingProxy time zodat visitor Eve niet kan liegen
@@ -206,10 +212,12 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		// LocalDate date = capsule.getCurrentTime().toLocalDate();
 		LocalDate date = LocalDate.now();
 		if (!capsule.getUserToken().checkIssuedDate(date)) {
+			System.out.println("MixingProxy || registervisit | date-check failed.");
 			return sign;
 		}
 		for (Capsule c : capsules) {
 			if (c.getUserToken().equals(capsule.getUserToken())) {
+				System.out.println("MixingProxy || registervisit | Capsule duplication.");
 				return sign;
 			}
 		}
@@ -217,8 +225,10 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		if (sign != null) {
 			capsules.add(capsule);
 			updateFile();
+			return sign;
 		}
-		return sign;
+		System.out.println("MixingProxy || registervisit | Signing failed.");
+		return null;
 	}
 
 	@Override

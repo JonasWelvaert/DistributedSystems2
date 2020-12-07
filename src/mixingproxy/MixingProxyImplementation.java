@@ -49,6 +49,7 @@ import matchingservice.MatchingService;
 import matchingservice.MatchingServiceInterface;
 import registrar.RegistrarInterface;
 import sharedclasses.Capsule;
+import sharedclasses.Token;
 import values.Values;
 
 public class MixingProxyImplementation extends UnicastRemoteObject implements MixingProxyInterface {
@@ -221,9 +222,15 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 	}
 
 	@Override
-	public void acknowledge(List<byte[]> tokens) {
-		// TODO Auto-generated method stub
-
+	public void acknowledge(List<Token> tokens) {
+		try {
+			Registry myRegistry = LocateRegistry.getRegistry(Values.MATCHINGSERVICE_HOSTNAME, Values.MATCHINGSERVICE_PORT);
+			MatchingServiceInterface matchingService = (MatchingServiceInterface) myRegistry.lookup(Values.MATCHINGSERVICE_SERVICE);
+			
+			matchingService.submitAcknowledgements(tokens);
+		} catch (RemoteException | NotBoundException e) {
+			e.printStackTrace();
+		}
 	}
 
 	private byte[] sign(byte[] toBeSigned) {

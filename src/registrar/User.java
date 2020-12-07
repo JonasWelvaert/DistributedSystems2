@@ -199,6 +199,15 @@ public class User {
 	public static void setAllUsersList(List<User> users) {
 		User.allUsers = users;
 	}
+	
+	public static User identifyUser(Token token) {
+		for(User user: User.allUsers) {
+			if(user.checkToken(token) != null) {
+				return user;
+			}
+		}
+		return null;
+	}
 
 	@Override
 	public int hashCode() {

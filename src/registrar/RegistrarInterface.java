@@ -2,6 +2,8 @@ package registrar;
 
 import java.security.*;
 
+import sharedclasses.Capsule;
+import sharedclasses.SystemException;
 import sharedclasses.Token;
 
 import java.rmi.Remote;
@@ -43,9 +45,7 @@ public interface RegistrarInterface extends Remote {
 	 */
 	public Map<LocalDate, List<Token>> retrieveTokens(String phoneNumber) throws RemoteException, UserNotRegisteredException, TokensAlreadyIssuedException;
 
-	public void addUnacknowledgedLogs(List<Token> unacknowledgedTokens) throws RemoteException;
-
-	public List<String> getUnacknowledgedPhoneNumbers() throws RemoteException;
+	public void flushUnacknowledgedInfo(List<Capsule> unackList) throws RemoteException, SystemException;
 
 	public Map<LocalDate, byte[]> getPseudonyms(String horecaNumber, String password, LocalDate ld)
 			throws RemoteException;

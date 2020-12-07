@@ -38,6 +38,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.stage.Stage;
+import matchingservice.MatchingServiceInterface;
 import mixingproxy.MixingProxyInterface;
 import registrar.RegistrarInterface;
 import registrar.TokensAlreadyIssuedException;
@@ -46,6 +47,7 @@ import registrar.UserNotRegisteredException;
 import sharedclasses.Capsule;
 import sharedclasses.Log;
 import sharedclasses.Token;
+import sharedclasses.Tuple;
 import values.Values;
 
 public class Visitor extends Application {
@@ -54,6 +56,8 @@ public class Visitor extends Application {
 	private static Map<LocalDate, List<Token>> issuedTokens = new HashMap<LocalDate, List<Token>>();
 	private static List<Log> logs = new ArrayList<>();
 	private static Log lastLog = null;
+	
+	private static List<Alert> pastAlerts;
 
 	private static Stage primaryStage;
 
@@ -321,6 +325,14 @@ public class Visitor extends Application {
 					}
 				}, date, TimeUnit.MILLISECONDS.convert(30, TimeUnit.MINUTES));
 
+			} else {
+				System.out.println("Visitor || Mixing Proxy did not sign: null received.");
+				Alert alert = new Alert(AlertType.ERROR);
+				alert.setTitle("Registration failed!");
+				alert.setHeaderText("Could not register visit.");
+				alert.setContentText("Failed to connect to the server. Please try again");
+				alert.showAndWait();
+				return null;
 			}
 			updateFile();
 			return signedHash;
@@ -344,7 +356,7 @@ public class Visitor extends Application {
 
 	public static List<Log> getLogs() {
 		List<Log> ret = new ArrayList<>();
-		LocalDateTime fourteenDaysAgo = LocalDateTime.now().minusDays(14);
+		LocalDateTime fourteenDaysAgo = LocalDateTime.now().minusDays(Values.CRITICAL_PERIOD_IN_DAYS);
 		for (Log l : logs) {
 			if (l.getStartTime().isAfter(fourteenDaysAgo)) {
 				ret.add(l);
@@ -353,6 +365,69 @@ public class Visitor extends Application {
 		return ret;
 	}
 
+	public static void fetchCriticalIntervalsAndCompare() {
+		try {
+			//MatchingService Registry
+			Registry matchingRegistry = LocateRegistry.getRegistry(Values.MATCHINGSERVICE_HOSTNAME, Values.MATCHINGSERVICE_PORT);
+			MatchingServiceInterface matchingService = (MatchingServiceInterface) matchingRegistry.lookup(Values.MATCHINGSERVICE_SERVICE);
+			//MixingProxy Registry
+			Registry mixingRegistry = LocateRegistry.getRegistry(Values.MIXINGPROXY_HOSTNAME,Values.MIXINGPROXY_PORT);
+			MixingProxyInterface mixingProxy = (MixingProxyInterface) mixingRegistry.lookup(Values.MIXINGPROXY_SERVICE);
+			
+			List<Tuple> criticalIntervals = matchingService.requestCriticalIntervals();			
+			//fetch own logs to compare [within critical interval]
+			List<Log> ownLogs = getLogs();
+			if(criticalIntervals == null || ownLogs == null) {
+				System.out.println("A null-variable was discovered. No reason to continue method...");
+				return;
+			}
+			
+			//For each critical interval received:
+				//find all logs that match the interval
+				//if so, add token to list & display alert
+				//if any matches were found, notify the mixingproxy with all tokens.
+			List<Token> tokensToSend = new ArrayList<>();
+			for(Tuple criticalInterval: criticalIntervals) {
+				boolean match = false;
+				String cateringName = null;
+				for(Log log: ownLogs) {
+					if(criticalInterval.contains(log)) {
+						if(!tokensToSend.contains(log.getToken())) {
+							tokensToSend.add(log.getToken());
+							cateringName = log.getBarname();
+							match = true;
+						}
+					}
+				}
+				if(match) {
+					//display an alert & notify mixingproxy
+					Alert alert = new Alert(AlertType.WARNING);
+					alert.setTitle("Risk detected!");
+					alert.setHeaderText("Possible infection detected!");
+					StringBuilder sb = new StringBuilder();
+					sb.append("Possible infection on ");
+					sb.append(criticalInterval.dateToString());
+					sb.append(" at catering facility ");
+					sb.append(cateringName);
+					sb.append("\n");
+					alert.setContentText(sb.toString());
+					pastAlerts.add(alert);
+					alert.showAndWait();
+				}
+			}
+			
+			if (!tokensToSend.isEmpty()) {
+				//only send if any matches were found
+				mixingProxy.acknowledge(tokensToSend);
+			}
+		} catch (RemoteException | NotBoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static List<Alert> getAlerts() {
+		return Visitor.pastAlerts;
+	}
 }
 
 class User {

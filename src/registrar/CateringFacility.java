@@ -19,6 +19,8 @@ public class CateringFacility {
 	private String horecaNumber;
 	private String address;
 	private String password;
+	
+	private Map<LocalDate, byte[]> pseudonyms;
 
 	public CateringFacility(String horecaName, String horecaNumber, String address, String password) {
 		secretKeys = new HashMap<>();
@@ -26,6 +28,7 @@ public class CateringFacility {
 		this.horecaNumber = horecaNumber;
 		this.address = address;
 		this.password = password;
+		this.pseudonyms = new HashMap<>();
 	}
 
 	private byte[] getSecretKey(LocalDate date, byte[] s) {
@@ -57,6 +60,8 @@ public class CateringFacility {
 			md = MessageDigest.getInstance("SHA-256");
 			String input = Base64.getEncoder().encodeToString(sCF) + address + date.toString();
 			pseudonym = md.digest(input.getBytes());
+			
+			this.pseudonyms.put(date, pseudonym);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
@@ -79,4 +84,7 @@ public class CateringFacility {
 		return horecaName;
 	}
 
+	public byte[] getPseudonymForDate(LocalDate date) {
+		return this.pseudonyms.get(date);
+	}
 }

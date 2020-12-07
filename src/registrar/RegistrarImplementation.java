@@ -11,6 +11,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
@@ -20,10 +21,12 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Scanner;
 
 import javax.crypto.KeyGenerator;
@@ -35,6 +38,9 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import barowner.BarOwner;
+import sharedclasses.Capsule;
+import sharedclasses.SystemException;
 import sharedclasses.Token;
 import values.Values;
 
@@ -89,7 +95,6 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			User.getUserList().forEach(user -> {
 				System.out.println(user);
 			});
-			// TODO: info uit file.
 
 			scanner.close();
 		} catch (FileNotFoundException e) {
@@ -160,6 +165,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	@Override
 	public synchronized Map<LocalDate, byte[]> enrollHORECA(String horecaName, String horecaNumber, String address,
 			String password) throws HorecaNumberAlreadyEnrolledException {
+		
 		for (CateringFacility cf : cateringFacilitys) {
 			if (cf.hasHorecaNumber(horecaNumber)) {
 				throw new HorecaNumberAlreadyEnrolledException();
@@ -236,15 +242,61 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	}
 
 	@Override
-	public synchronized void addUnacknowledgedLogs(List<Token> unacknowledgedTokens) {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public synchronized List<String> getUnacknowledgedPhoneNumbers() {
-		// TODO Auto-generated method stub
-		return null;
+	public synchronized void flushUnacknowledgedInfo(List<Capsule> unackList) throws SystemException {
+		List<String> result = new ArrayList<>();
+		for(Capsule caps: unackList) {
+			Token toFind = caps.getUserToken();
+			User user = User.identifyUser(toFind);
+			//if null: error in system.
+			if(user == null) {
+				throw new SystemException("Unable to identify user.");
+			}
+			//identify cateringfacility
+			byte[] cateringHash = caps.getHash();
+			LocalDate ld = caps.getCurrentTime().toLocalDate();
+			String random = Integer.toString(getRandom(ld));
+			
+			CateringFacility catf = null;
+			for(CateringFacility cf : this.cateringFacilitys) {
+				String pseudonym = Base64.getEncoder().encodeToString(cf.getPseudonymForDate(ld));
+				try {
+					MessageDigest md = MessageDigest.getInstance("SHA-256");
+					String input = random + pseudonym;
+					byte[] gehashed = md.digest(input.getBytes());
+					if(Arrays.equals(cateringHash, gehashed)) {
+						catf = cf;
+						break;
+					}
+				} catch (NoSuchAlgorithmException e) {
+					e.printStackTrace();
+				}
+			}
+			if(catf == null) {
+				throw new SystemException("Unable to identify Catering Facility.");
+			}
+			
+			//construct info-string
+			StringBuilder sb = new StringBuilder();
+			sb.append("User with phoneNumber ");
+			sb.append(user.getPhoneNumber());
+			sb.append(" was put at risk of infection on ");
+			sb.append(caps.getCurrentTime().toLocalDate().toString());
+			sb.append(" in catering facility ");
+			sb.append(catf.getHorecaName());
+			sb.append("\n");
+			result.add(sb.toString());
+		}
+		//create a file for this date
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter("/toNotify/" + LocalDate.now().toString() + ".txt"));
+			for(String s: result) {
+				writer.write(s);
+			}
+			writer.flush();
+			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -269,5 +321,14 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			}
 		}
 		return null;
+	}
+	
+	public int getRandom(LocalDate ld) {
+		Map<LocalDate, Integer> randomNumbers = BarOwner.getRandoms();
+		if (!randomNumbers.containsKey(ld)) {
+			randomNumbers.put(ld, new Random().nextInt());
+			updateFile();
+		}
+		return randomNumbers.get(ld);
 	}
 }

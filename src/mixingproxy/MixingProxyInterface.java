@@ -5,6 +5,7 @@ import java.rmi.RemoteException;
 import java.util.List;
 
 import sharedclasses.Capsule;
+import sharedclasses.Token;
 
 public interface MixingProxyInterface extends Remote {
 	/**
@@ -13,6 +14,6 @@ public interface MixingProxyInterface extends Remote {
 	 */
 	public byte[] registerVisit(Capsule capsule) throws RemoteException;
 	
-	public void acknowledge(List<byte[]> tokens) throws RemoteException;
+	public void acknowledge(List<Token> tokens) throws RemoteException;
 
 }

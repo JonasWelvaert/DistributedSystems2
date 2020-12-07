@@ -8,22 +8,18 @@ import java.util.List;
 
 import sharedclasses.Capsule;
 import sharedclasses.Log;
+import sharedclasses.Token;
+import sharedclasses.Tuple;
 
 public interface MatchingServiceInterface extends Remote {
 	public void submitCapsules(List<Capsule> capsules) throws RemoteException;
 
-	public void submitAcknowledgements(List<Capsule> capsules) throws RemoteException;
+	public void submitAcknowledgements(List<Token> tokens) throws RemoteException;
 
-	public List<Tuple> requestInfectedCapsules() throws RemoteException;
+	public List<Tuple> requestCriticalIntervals() throws RemoteException;
 
 	// temp
 	public void submitLogs(List<SignedObject> medicalLogs) throws RemoteException;
-}
-
-
-class Tuple {
-	Capsule capsule;
-	Interval interval;
 }
 
 class Interval {

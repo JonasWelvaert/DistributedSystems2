@@ -1,30 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.canvas.*?>
-<?import javafx.scene.control.*?>
-<?import java.lang.*?>
-<?import javafx.scene.layout.*?>
+<?import javafx.scene.canvas.Canvas?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="visitor.VisitorHomeController">
-   <children>
-      <AnchorPane fx:id="apHorecaForm" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-         <children>
-            <Label text="Type here the QR-code content of the visited HORECA:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0" />
-            <TextField fx:id="tfQrCodeContent" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="30.0" />
-            <Button fx:id="buttonRegisterAtHoreca" mnemonicParsing="false" text="Register @HORECA" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="30.0" />
-            <Button fx:id="buttonShareLogs" mnemonicParsing="false" text="Share logs" AnchorPane.bottomAnchor="8.0" AnchorPane.rightAnchor="8.0" />
-         </children>
-      </AnchorPane>
-      <AnchorPane fx:id="apHorecaInformation" layoutX="8.0" layoutY="80.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0">
-         <children>
-            <Label text="You are visiting:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
-            <Canvas fx:id="proofOfRegistration" height="300.0" layoutX="59.0" layoutY="63.0" width="300.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0" />
-            <Label layoutX="8.0" layoutY="21.0" text="Today's proof of registration:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="40.0" />
-            <Label fx:id="labelHorecaName" layoutX="142.0" text="name" AnchorPane.leftAnchor="110.0" AnchorPane.topAnchor="0.0" />
-            <Label layoutY="21.0" text="Entrance time:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="20.0" />
-            <Label fx:id="labelTimeOfRegistration" layoutX="103.0" layoutY="20.0" text="time" AnchorPane.leftAnchor="110.0" AnchorPane.topAnchor="20.0" />
-            <Button fx:id="buttonLeaveHoreca" layoutX="149.0" layoutY="331.0" mnemonicParsing="false" text="Leave" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0" AnchorPane.topAnchor="360.0" />
-         </children>
-      </AnchorPane>
-   </children>
-</AnchorPane>
+<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="431.0" prefWidth="364.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="visitor.VisitorHomeController">
+  <tabs>
+    <Tab text="Visit Horeca">
+         <content>
+            <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity">
+               <children>
+                  <AnchorPane fx:id="apHorecaForm" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                     <children>
+                        <Label text="Type here the QR-code content of the visited HORECA:" underline="true" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0" />
+                        <TextField fx:id="tfQrCodeContent" AnchorPane.leftAnchor="8.0" AnchorPane.topAnchor="30.0" />
+                        <Button fx:id="buttonRegisterAtHoreca" mnemonicParsing="false" text="Register @HORECA" AnchorPane.leftAnchor="200.0" AnchorPane.topAnchor="30.0" />
+                        <Button fx:id="buttonShareLogs" mnemonicParsing="false" text="Share logs" AnchorPane.bottomAnchor="8.0" AnchorPane.rightAnchor="8.0" />
+                     </children>
+                  </AnchorPane>
+                  <AnchorPane fx:id="apHorecaInformation" layoutX="8.0" layoutY="80.0" AnchorPane.bottomAnchor="8.0" AnchorPane.leftAnchor="8.0" AnchorPane.rightAnchor="8.0" AnchorPane.topAnchor="8.0">
+                     <children>
+                        <Label text="You are visiting:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                        <Canvas fx:id="proofOfRegistration" height="300.0" layoutX="59.0" layoutY="63.0" width="300.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="60.0" />
+                        <Label layoutX="8.0" layoutY="21.0" text="Today's proof of registration:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="40.0" />
+                        <Label fx:id="labelHorecaName" layoutX="142.0" text="name" AnchorPane.leftAnchor="110.0" AnchorPane.topAnchor="0.0" />
+                        <Label layoutY="21.0" text="Entrance time:" underline="true" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="20.0" />
+                        <Label fx:id="labelTimeOfRegistration" layoutX="103.0" layoutY="20.0" text="time" AnchorPane.leftAnchor="110.0" AnchorPane.topAnchor="20.0" />
+                        <Button fx:id="buttonLeaveHoreca" layoutX="149.0" layoutY="331.0" mnemonicParsing="false" text="Leave" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0" AnchorPane.topAnchor="360.0" />
+                     </children>
+                  </AnchorPane>
+               </children>
+            </AnchorPane>
+         </content>
+    </Tab>
+    <Tab text="Sync">
+      <content>
+        <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+               <children>
+                  <Button layoutX="78.0" layoutY="176.0" mnemonicParsing="false" onAction="#fetchCriticalIntervals" prefHeight="25.0" prefWidth="209.0" text="Fetch Critical Intervals" />
+               </children></AnchorPane>
+      </content>
+    </Tab>
+  </tabs>
+</TabPane>

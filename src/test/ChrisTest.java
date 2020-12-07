@@ -1,5 +1,7 @@
 package test;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.security.*;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -18,8 +20,18 @@ public class ChrisTest {
 
 	public static void main(String[] args) throws NoSuchAlgorithmException {
 		//intToByteArrayTest();
-		SecureRandom sr = new SecureRandom();
-		createTokenTest(sr);
+		//SecureRandom sr = new SecureRandom();
+		//createTokenTest(sr);
+		
+		try {
+			BufferedWriter writer = new BufferedWriter(new FileWriter(LocalDate.now().toString() + ".txt"));
+			writer.write("testing 1 2 3");
+			writer.flush();
+			writer.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	private static void intToByteArrayTest() {

@@ -232,5 +232,10 @@ public class VisitorHomeController {
 		}
 
 	}
+	
+	@FXML
+	public void fetchCriticalIntervals() {
+		Visitor.fetchCriticalIntervalsAndCompare();
+	}
 
 }

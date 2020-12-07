@@ -1,5 +1,7 @@
 package matchingservice;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -20,9 +22,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+
 import java.util.Scanner;
 
 import com.google.gson.Gson;
@@ -35,7 +42,9 @@ import com.google.gson.stream.JsonWriter;
 import registrar.RegistrarInterface;
 import sharedclasses.Capsule;
 import sharedclasses.Log;
+import sharedclasses.SystemException;
 import sharedclasses.Token;
+import sharedclasses.Tuple;
 import values.Values;
 
 public class MatchingServiceImplementation extends UnicastRemoteObject implements MatchingServiceInterface {
@@ -43,6 +52,7 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 	private static final long serialVersionUID = 1L;
 	private List<Capsule> capsules;
 	private Map<LocalDate, List<byte[]>> pseudonyms; // Voorlopig mag CF name weggelaten worden voor privacy concerns.
+	private Map<LocalDate, List<Tuple>> criticalIntervals;
 
 	protected MatchingServiceImplementation() throws RemoteException {
 		try {
@@ -71,12 +81,56 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 			pseudonyms = gson.fromJson(scanner.nextLine(), mapType);
 			// TODO: info uit file.
 
+			Type critType = new TypeToken<Map<LocalDate, List<Tuple>>>(){
+			}.getType();
+			criticalIntervals = gson.fromJson(scanner.nextLine(), critType);
+			
 			scanner.close();
 		} catch (FileNotFoundException e) {
 			capsules = new ArrayList<Capsule>();
 			pseudonyms = new HashMap<LocalDate, List<byte[]>>();
+			criticalIntervals = new HashMap<LocalDate, List<Tuple>>();
 			// TODO: lege info
 		}
+		
+		JFrame f = new JFrame();
+		JButton button = new JButton("Flush critical capsules to Registrar.");
+		button.setBounds(130,100,150,40);
+		button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				flushUnackedCapsules();
+			}
+
+			//also reset the capsules-list to a new ArrayList?
+			private void flushUnackedCapsules() {
+				List<Capsule> toFlush = new ArrayList<>();
+				for(Capsule caps: capsules) {
+					if(caps.isCritical() && !caps.isInformed()) {
+						toFlush.add(caps);
+						caps.setInformed(true);
+					}
+				}
+				try {
+					Registry registry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
+					RegistrarInterface registrar = (RegistrarInterface) registry.lookup(Values.REGISTRAR_SERVICE);
+					
+					registrar.flushUnacknowledgedInfo(toFlush);
+				} catch (RemoteException | NotBoundException e) {
+					e.printStackTrace();
+				} catch (SystemException e) {
+					System.err.println("Error with system detected. Critical bug with identification.");
+					System.err.println("");
+					e.printStackTrace();
+				}
+			}
+		});
+		f.add(button);
+		f.setSize(400,500);
+		f.setLayout(null);
+		f.setVisible(true);
+		
 	}
 
 	private void updateFile() {
@@ -104,6 +158,7 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 			}).create();
 			bw.write(gson.toJson(capsules) + System.lineSeparator());
 			bw.write(gson.toJson(pseudonyms) + System.lineSeparator());
+			bw.write(gson.toJson(criticalIntervals) + System.lineSeparator());
 			// TODO: info wegschrijven naar file.
 
 			bw.flush();
@@ -123,15 +178,31 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 	}
 
 	@Override
-	public void submitAcknowledgements(List<Capsule> capsules) {
-		// TODO Auto-generated method stub
-
+	public void submitAcknowledgements(List<Token> tokens) {
+		for(Capsule caps: this.capsules) {
+			if(tokens.contains(caps.getUserToken())) {
+				caps.setInformed(true);
+			}
+		}
+		updateFile();
 	}
 
 	@Override
-	public List<Tuple> requestInfectedCapsules() {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Tuple> requestCriticalIntervals() {
+		List<Tuple> result = new ArrayList<>();
+		for(int i=0; i<Values.CRITICAL_PERIOD_IN_DAYS; i++) {
+			LocalDate date = LocalDate.now().minusDays(i);
+			List<Tuple> criticalOfDay = this.criticalIntervals.get(date);
+			if(criticalOfDay == null) {
+				continue;
+			}
+			criticalOfDay.forEach(element -> {
+				if(!result.contains(element)) {
+					result.add(element);
+				}
+			});
+		}
+		return result;
 	}
 
 	@Override
@@ -157,13 +228,22 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 				for (byte[] pseudEntry : pseudonyms.get(date)) {
 					String input = random + Base64.getEncoder().encodeToString(pseudEntry);
 					byte[] gehashed = md.digest(input.getBytes());
-					System.out.println(Base64.getEncoder().encodeToString(gehashed));
-					System.out.println(Base64.getEncoder().encodeToString(hash));
 					if (Arrays.equals(gehashed, hash)) {
+						System.out.println(Base64.getEncoder().encodeToString(gehashed));
+						System.out.println(Base64.getEncoder().encodeToString(hash));
 						validHash = true;
 						break;
 					}
 				}
+				//construct the Tuple to put in criticalIntervals-list
+				if(this.criticalIntervals.get(LocalDate.now()) == null) {
+					this.criticalIntervals.put(LocalDate.now(), new ArrayList<>());
+				}
+				List<Tuple> criticalLogs = this.criticalIntervals.get(LocalDate.now());
+				Tuple tup = new Tuple(l.getHash(), l.getStartTime(), l.getEndTime());
+				//check if there is an overlap with a previously constructed Tuple, if so fix the list
+				addTuple(tup, criticalLogs);
+				
 				// begintijd [begin; eind[
 				if (validHash) {
 					for (Capsule c : this.capsules) {
@@ -186,4 +266,25 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 
 	}
 
+	//fixes the entire tuple list so all overlapping with the new tuple are unified.
+	private static void addTuple(Tuple tup, List<Tuple> tupList) {
+		Tuple toMatch = tup;
+		for(int i=0; i<tupList.size(); i++) {
+			boolean usefulIteration = false;
+			Iterator<Tuple> listit = tupList.iterator();
+			while(listit.hasNext()) {
+				Tuple thisTup = listit.next();
+				if(Tuple.haveOverlap(tup, thisTup)) {
+					listit.remove();
+					toMatch = Tuple.fixOverlap(tup, thisTup);
+					usefulIteration = true;
+					break;
+				}
+			}
+			if(!usefulIteration) {
+				break;
+			}
+		}
+		tupList.add(toMatch);
+	}
 }

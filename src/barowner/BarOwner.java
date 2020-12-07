@@ -266,4 +266,7 @@ public class BarOwner extends Application {
 		}
 	}
 
+	public static Map<LocalDate, Integer> getRandoms(){
+		return BarOwner.randomNumbers;
+	}
 }

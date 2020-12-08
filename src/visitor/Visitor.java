@@ -305,6 +305,7 @@ public class Visitor extends Application {
 			capsule.setCurrentTime(entryTime);
 			capsule.setHash(Base64.getDecoder().decode(hash));
 			capsule.setUserToken(token);
+			capsule.setRandom(Integer.parseInt(random));
 			byte[] signedHash = mixingProxy.registerVisit(capsule);
 			if (signedHash != null) {
 				capsule.setSign(signedHash);
@@ -408,18 +409,21 @@ public class Visitor extends Application {
 				}
 				if(match) {
 					//display an alert & notify mixingproxy
-					Alert alert = new Alert(AlertType.WARNING);
-					alert.setTitle("Risk detected!");
-					alert.setHeaderText("Possible infection detected!");
 					StringBuilder sb = new StringBuilder();
 					sb.append("Possible infection on ");
 					sb.append(criticalInterval.dateToString());
 					sb.append(" at catering facility ");
 					sb.append(cateringName);
 					sb.append("\n");
-					alert.setContentText(sb.toString());
-					pastAlerts.add(sb.toString());
-					alert.showAndWait();
+					
+					if (!pastAlerts.contains(sb.toString())) {
+						pastAlerts.add(sb.toString());
+						Alert alert = new Alert(AlertType.WARNING);
+						alert.setTitle("Risk detected!");
+						alert.setHeaderText("Possible infection detected!");
+						alert.setContentText(sb.toString());
+						alert.showAndWait();
+					}
 				}
 			}
 			

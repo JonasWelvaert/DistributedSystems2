@@ -1,17 +1,23 @@
 package mixingproxy;
 
+import java.io.IOException;
 import java.rmi.AccessException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import matchingservice.MatchingService;
 import values.Values;
 
-public class MixingProxy {
+public class MixingProxy extends Application{
 
 	public static void main(String[] args) {
-		MixingProxy mixingProxy = new MixingProxy();
-		mixingProxy.startServer();
+		launch(args);
 	}
 	
 	private void startServer() {
@@ -41,7 +47,24 @@ public class MixingProxy {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}*/
-		System.out.println("| Mixing Proxy is ready.");
+		System.out.println("| Mixing Proxy listening at port " + Values.MIXINGPROXY_PORT);
+	}
+
+	@Override
+	public void start(Stage primaryStage) {
+		MixingProxy mixingProxy = new MixingProxy();
+		mixingProxy.startServer();
+		try {
+			Parent root = FXMLLoader.load(getClass().getResource("/mixingproxy/MixingProxy.fxml"));
+			Scene scene = new Scene(root);
+
+			primaryStage.setTitle("MixingProxy Server UI");
+			primaryStage.setScene(scene);
+			primaryStage.setResizable(false);
+			primaryStage.show();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

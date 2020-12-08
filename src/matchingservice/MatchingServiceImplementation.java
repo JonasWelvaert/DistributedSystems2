@@ -2,9 +2,11 @@ package matchingservice;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -13,11 +15,19 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.SignatureException;
 import java.security.SignedObject;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -39,6 +49,13 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
+import registrar.RegistrarImplementation;
 import registrar.RegistrarInterface;
 import sharedclasses.Capsule;
 import sharedclasses.Log;
@@ -46,6 +63,7 @@ import sharedclasses.SystemException;
 import sharedclasses.Token;
 import sharedclasses.Tuple;
 import values.Values;
+import visitor.Visitor;
 
 public class MatchingServiceImplementation extends UnicastRemoteObject implements MatchingServiceInterface {
 
@@ -53,9 +71,13 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 	private List<Capsule> capsules;
 	private Map<LocalDate, List<byte[]>> pseudonyms; // Voorlopig mag CF name weggelaten worden voor privacy concerns.
 	private Map<LocalDate, List<Tuple>> criticalIntervals;
+	
+	private transient static MatchingServiceController controller;
+	private transient static MatchingServiceImplementation impl;
 
 	protected MatchingServiceImplementation() throws RemoteException {
 		try {
+			MatchingServiceImplementation.impl = this;
 			File file = new File(Values.FILE_DIR + "matchingservice.csv");
 			Scanner scanner = new Scanner(file);
 
@@ -92,46 +114,6 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 			criticalIntervals = new HashMap<LocalDate, List<Tuple>>();
 			// TODO: lege info
 		}
-		
-		JFrame f = new JFrame();
-		f.setTitle("Matching Service");
-		JButton button = new JButton("Flush critical capsules to Registrar.");
-		button.setBounds(130,100,150,40);
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				flushUnackedCapsules();
-			}
-
-			//also reset the capsules-list to a new ArrayList?
-			private void flushUnackedCapsules() {
-				List<Capsule> toFlush = new ArrayList<>();
-				for(Capsule caps: capsules) {
-					if(caps.isCritical() && !caps.isInformed()) {
-						toFlush.add(caps);
-						caps.setInformed(true);
-					}
-				}
-				try {
-					Registry registry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
-					RegistrarInterface registrar = (RegistrarInterface) registry.lookup(Values.REGISTRAR_SERVICE);
-					
-					registrar.flushUnacknowledgedInfo(toFlush);
-				} catch (RemoteException | NotBoundException e) {
-					e.printStackTrace();
-				} catch (SystemException e) {
-					System.err.println("Error with system detected. Critical bug with identification.");
-					System.err.println("");
-					e.printStackTrace();
-				}
-			}
-		});
-		f.add(button);
-		f.setSize(400,500);
-		f.setLayout(null);
-		f.setVisible(true);
-		
 	}
 
 	private void updateFile() {
@@ -164,18 +146,24 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 
 			bw.flush();
 			bw.close();
+			
+			Platform.runLater(new Runnable() {
+			    @Override
+			    public void run() {
+			    	controller.updateInfo(capsules);
+			    }
+			});
 		} catch (IOException e) {
 			System.err.println("error in updateFile()-method.");
 			e.printStackTrace();
 		}
-
-		// TODO plannen om capsules na X(=?14) dagen te verwijderen.
 	}
 
 	@Override
 	public void submitCapsules(List<Capsule> capsules) {
 		this.capsules.addAll(capsules);
 		updateFile();
+		addLog(LocalTime.now() + ": capsules submitted by Mixing Proxy.");
 	}
 
 	@Override
@@ -186,6 +174,35 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 			}
 		}
 		updateFile();
+		addLog(LocalTime.now() + ": acknowledgements received.");
+	}
+	
+	//also reset the capsules-list to a new ArrayList?
+	public void flushUnackedCapsules() {
+		List<Capsule> toFlush = new ArrayList<>();
+		for(Capsule caps: capsules) {
+			if(caps.isCritical() && !caps.isInformed()) {
+				toFlush.add(caps);
+				caps.setInformed(true);
+			}
+		}
+		try {
+			Registry registry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
+			RegistrarInterface registrar = (RegistrarInterface) registry.lookup(Values.REGISTRAR_SERVICE);
+			
+			registrar.flushUnacknowledgedInfo(toFlush);
+			toFlush.forEach(caps -> {
+				caps.setInformed(true);
+			});
+			updateFile();
+			addLog(LocalTime.now() + ": flushing to registrar...");
+		} catch (RemoteException | NotBoundException e) {
+			e.printStackTrace();
+		} catch (SystemException e) {
+			System.err.println("Error with system detected. Critical bug with identification.");
+			System.err.println("");
+			e.printStackTrace();
+		}
 	}
 
 	@Override
@@ -203,6 +220,7 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 				}
 			});
 		}
+		addLog(LocalTime.now() + ": Critical intervals request acknowledged.");
 		return result;
 	}
 
@@ -211,6 +229,15 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 		// TODO check if signed by doctor.
 		try {
 			for (SignedObject so : medicalLogs) {
+				//check signature
+				Signature signature = Signature.getInstance("SHA256withRSA");
+				if(!so.verify(getArtsPublicKey(), signature)) {
+					//"blacklist de spammer" & doe niets verder
+					System.out.println("Signature verification failed -- doctor imposter found.");
+					addLog(LocalTime.now() + ": false logs received from possible imposter.");
+					return;
+				}
+				//do stuff
 				Log l = (Log) so.getObject();
 				if (!pseudonyms.containsKey(l.getStartTime().toLocalDate())) {
 					Registry registry = LocateRegistry.getRegistry(Values.REGISTRAR_HOSTNAME, Values.REGISTRAR_PORT);
@@ -230,12 +257,11 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 					String input = random + Base64.getEncoder().encodeToString(pseudEntry);
 					byte[] gehashed = md.digest(input.getBytes());
 					if (Arrays.equals(gehashed, hash)) {
-						System.out.println(Base64.getEncoder().encodeToString(gehashed));
-						System.out.println(Base64.getEncoder().encodeToString(hash));
 						validHash = true;
 						break;
 					}
 				}
+				System.out.println("Logs received from doctor.");
 				//construct the Tuple to put in criticalIntervals-list
 				if(this.criticalIntervals.get(LocalDate.now()) == null) {
 					this.criticalIntervals.put(LocalDate.now(), new ArrayList<>());
@@ -261,7 +287,8 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 				}
 			}
 			updateFile();
-		} catch (NotBoundException | NoSuchAlgorithmException | ClassNotFoundException | IOException e) {
+			addLog(LocalTime.now() + ": logs received from doctor.");
+		} catch (NotBoundException | NoSuchAlgorithmException | ClassNotFoundException | IOException | InvalidKeyException | SignatureException e) {
 			e.printStackTrace();
 		}
 
@@ -287,5 +314,40 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 			}
 		}
 		tupList.add(toMatch);
+	}
+	
+	private PublicKey getArtsPublicKey() {
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(new File(Values.FILE_DIR, "artsPublicKey.txt")));
+			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+			X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(Base64.getDecoder().decode(reader.readLine()));
+			return keyFactory.generatePublic(pubSpec);
+		} catch (IOException | InvalidKeySpecException | NoSuchAlgorithmException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static void setController(MatchingServiceController controller) {
+		MatchingServiceImplementation.controller = controller;	
+		Platform.runLater(new Runnable() {
+		    @Override
+		    public void run() {
+		    	controller.updateInfo(MatchingServiceImplementation.impl.capsules);
+		    }
+		});
+	}
+	
+	public static MatchingServiceImplementation getImpl() {
+		return MatchingServiceImplementation.impl;
+	}
+	
+	public static void addLog(String log) {
+		Platform.runLater(new Runnable() {
+		    @Override
+		    public void run() {
+		    	MatchingServiceImplementation.controller.addLog(log);
+		    }
+		});
 	}
 }

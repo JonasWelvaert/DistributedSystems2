@@ -1,17 +1,23 @@
 package matchingservice;
 
+import java.io.IOException;
 import java.rmi.AccessException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 import values.Values;
+import visitor.Visitor;
 
-public class MatchingService {
+public class MatchingService extends Application{
 
 	public static void main(String[] args) {
-		MatchingService matchingService = new MatchingService();
-		matchingService.startServer();
+		launch(args);	
 	}
 
 	private void startServer() {
@@ -39,7 +45,23 @@ public class MatchingService {
 		 * try { new MixingProxyImplementation(); } catch (Exception e) {
 		 * e.printStackTrace(); }
 		 */
-		System.out.println("| Matching Service is ready.");
+		System.out.println("| Matching Service listening at port " + Values.MATCHINGSERVICE_PORT);
+	}
 
+	@Override
+	public void start(Stage primaryStage) {
+		MatchingService matchingService = new MatchingService();
+		matchingService.startServer();
+		try {
+			Parent root = FXMLLoader.load(getClass().getResource("/matchingservice/MatchingService.fxml"));
+			Scene scene = new Scene(root);
+
+			primaryStage.setTitle("MatchingService Server UI");
+			primaryStage.setScene(scene);
+			primaryStage.setResizable(false);
+			primaryStage.show();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

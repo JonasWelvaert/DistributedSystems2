@@ -12,6 +12,7 @@ public class Capsule implements Serializable {
 	private byte[] sign = null;
 	private boolean critical = false;
 	private boolean informed = false;
+	private Integer random = null;
 
 	public void setCurrentTime(LocalDateTime currentTime) {
 		this.currentTime = currentTime;
@@ -59,5 +60,13 @@ public class Capsule implements Serializable {
 	
 	public void setInformed(boolean informed) {
 		this.informed = informed;
+	}
+
+	public Integer getRandom() {
+		return random;
+	}
+
+	public void setRandom(Integer random) {
+		this.random = random;
 	}
 }

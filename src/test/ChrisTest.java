@@ -1,7 +1,9 @@
 package test;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.security.*;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -15,14 +17,16 @@ import javax.security.*;
 import javax.xml.bind.DatatypeConverter;
 
 import sharedclasses.Token;
+import values.Values;
 
 public class ChrisTest {
 
-	public static void main(String[] args) throws NoSuchAlgorithmException {
+	public static void main(String[] args) throws NoSuchAlgorithmException, IOException {
 		//intToByteArrayTest();
 		//SecureRandom sr = new SecureRandom();
 		//createTokenTest(sr);
 		
+		/*
 		try {
 			BufferedWriter writer = new BufferedWriter(new FileWriter(LocalDate.now().toString() + ".txt"));
 			writer.write("testing 1 2 3");
@@ -31,7 +35,27 @@ public class ChrisTest {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		*/
 		
+		KeyPairGenerator kpg;
+		kpg = KeyPairGenerator.getInstance("RSA");
+		KeyPair keyPair = kpg.generateKeyPair();
+		
+		PublicKey pubkey = keyPair.getPublic();
+		String s1 = Base64.getEncoder().encodeToString(pubkey.getEncoded());
+		PrivateKey privkey = keyPair.getPrivate();
+		String s2 = Base64.getEncoder().encodeToString(privkey.getEncoded());
+		
+		File file = new File(Values.FILE_DIR, "arts.txt");
+		FileWriter fw = new FileWriter(file);
+		BufferedWriter writer = new BufferedWriter(fw);
+		
+		writer.write(s1);
+		writer.newLine();
+		writer.write(s2);
+		
+		writer.flush();
+		writer.close();
 	}
 	
 	private static void intToByteArrayTest() {

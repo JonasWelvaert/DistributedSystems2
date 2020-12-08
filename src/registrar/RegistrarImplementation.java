@@ -20,6 +20,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -39,6 +40,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import barowner.BarOwner;
+import javafx.application.Platform;
 import sharedclasses.Capsule;
 import sharedclasses.SystemException;
 import sharedclasses.Token;
@@ -51,10 +53,12 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 	private List<User> users;
 	private byte[] secretKey;
 	private KeyPair keyPair;
+	
+	private transient static RegistrarImplementation impl;
+	private transient static RegistrarController controller;
 
 	public RegistrarImplementation() throws RemoteException, NoSuchAlgorithmException {
-		// super(Values.REGISTRAR_PORT, new RMISSLClientSocketFactory(), new
-		// RMISSLServerSocketFactory());
+		RegistrarImplementation.impl = this;
 		try {
 			File file = new File(Values.FILE_DIR + "registrar.csv");
 			Scanner scanner = new Scanner(file);
@@ -92,9 +96,6 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			}.getType();
 			users = gson.fromJson(scanner.nextLine(), userListType);
 			User.initialiseUserSystem(Values.CRITICAL_PERIOD_IN_DAYS, users);
-			User.getUserList().forEach(user -> {
-				System.out.println(user);
-			});
 
 			scanner.close();
 		} catch (FileNotFoundException e) {
@@ -156,6 +157,13 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 
 			bw.flush();
 			bw.close();
+			
+			Platform.runLater(new Runnable() {
+			    @Override
+			    public void run() {
+			    	controller.updateInfo(users.size(), cateringFacilitys.size());
+			    }
+			});
 		} catch (IOException e) {
 			System.err.println("error in updateFile()-method.");
 			e.printStackTrace();
@@ -168,6 +176,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 		
 		for (CateringFacility cf : cateringFacilitys) {
 			if (cf.hasHorecaNumber(horecaNumber)) {
+				addLog(LocalTime.now() + ": duplicate horeca registration rejected.");
 				throw new HorecaNumberAlreadyEnrolledException();
 			}
 		}
@@ -178,6 +187,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 		LocalDate d = LocalDate.now();
 		map.put(d, cf.getPseudonym(d, secretKey));
 		updateFile();
+		addLog(LocalTime.now() + ": " + horecaName + " enrolled with number " + horecaNumber + ".");
 		return map;
 	}
 
@@ -193,6 +203,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 		// TODO: upgrade towards week/month keys
 		map.put(ld, cateringfacility.getPseudonym(ld, secretKey));
 		updateFile();
+		addLog(LocalTime.now() + ": catering " + horecaNumber + " got daily pseudonym.");
 		return map;
 	}
 
@@ -201,6 +212,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 		try {
 			new User(phoneNumber); // Constructor does already
 			updateFile();
+			addLog(LocalTime.now() + ": user added with number " + phoneNumber);
 		} catch (NotInitialisedException e) {
 			System.err.println(
 					"arrived in illegal state with 'enrollUser(String)-method', should never throw this error.");
@@ -218,6 +230,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			throws TokensAlreadyIssuedException, UserNotRegisteredException {
 		User user = User.findUser(phoneNumber);
 		if (user == null) {
+			addLog(LocalTime.now() + ": unregistered user asked for tokens.");
 			throw new UserNotRegisteredException(phoneNumber);
 		}
 		Map<LocalDate, List<Token>> tokensMap = new HashMap<>();
@@ -230,13 +243,20 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 		for (int i = 0; i < 48; i++) {
 			tokens.add(Token.createToken(this.keyPair.getPrivate(), rng, date));
 		}
+		
 		tokensMap.put(date, tokens);
 		// nu hebben we een lijst tokens aangemaakt & ondertekend. Deze moeten
 		// geregistreerd worden bij de user.
-		if (!User.addTokens(user, tokensMap)) {
-			System.out.println(
-					"Something went wrong finding the user in the User.addTokens-method. Called by retrieveTokens RMI method.");
+		try {
+			if (!User.addTokens(user, tokensMap)) {
+				System.out.println(
+						"Something went wrong finding the user in the User.addTokens-method. Called by retrieveTokens RMI method.");
+			}
+		} catch (TokensAlreadyIssuedException e) {
+			addLog(LocalTime.now() + ": tokens for " + phoneNumber + " were already issued today.");
+			throw e;
 		}
+		addLog(LocalTime.now() + ": daily allowance for " + phoneNumber + " added.");
 		updateFile();
 		return tokensMap;
 	}
@@ -253,15 +273,14 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			}
 			//identify cateringfacility
 			byte[] cateringHash = caps.getHash();
-			LocalDate ld = caps.getCurrentTime().toLocalDate();
-			String random = Integer.toString(getRandom(ld));
-			
-			/*
+			LocalDate ld = caps.getCurrentTime().toLocalDate();			
+
 			CateringFacility catf = null;
 			for(CateringFacility cf : this.cateringFacilitys) {
 				String pseudonym = Base64.getEncoder().encodeToString(cf.getPseudonymForDate(ld));
 				try {
 					MessageDigest md = MessageDigest.getInstance("SHA-256");
+					String random = Integer.toString(caps.getRandom());
 					String input = random + pseudonym;
 					byte[] gehashed = md.digest(input.getBytes());
 					if(Arrays.equals(cateringHash, gehashed)) {
@@ -275,7 +294,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			if(catf == null) {
 				throw new SystemException("Unable to identify Catering Facility.");
 			}
-			*/
+
 			
 			//construct info-string
 			StringBuilder sb = new StringBuilder();
@@ -283,10 +302,8 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			sb.append(user.getPhoneNumber());
 			sb.append(" was put at risk of infection on ");
 			sb.append(caps.getCurrentTime().toLocalDate().toString());
-			/*
 			sb.append(" in catering facility ");
 			sb.append(catf.getHorecaName());
-			*/
 			sb.append(".\n");
 			result.add(sb.toString());
 			
@@ -294,7 +311,6 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 		//create a file for this date
 		try {
 			File file = new File(Values.FILE_DIR, "toNotify/" + LocalDate.now().toString() + ".txt");
-			file.createNewFile();
 			FileWriter fw = new FileWriter(file);
 			BufferedWriter writer = new BufferedWriter(fw);
 			
@@ -303,7 +319,10 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			}
 			writer.flush();
 			writer.close();
+			addLog(LocalTime.now() + ": unacknowledged capsules logged, location: ");
+			addLog("\t\t" + Values.FILE_DIR + "toNotify/" + LocalDate.now() + ".txt");
 		} catch (IOException e) {
+			addLog(LocalTime.now() + ": failure to log unacknowledged capsules");
 			e.printStackTrace();
 		}
 	}
@@ -319,6 +338,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 		for (CateringFacility cf : cateringFacilitys) {
 			ret.add(cf.getPseudonym(date, secretKey));
 		}
+		addLog(LocalTime.now() + ": pseudonym-list sent for day " + LocalDate.now() + ".");
 		return ret;
 	}
 
@@ -329,6 +349,7 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 				return cf.getPseudonym(date, secretKey);
 			}
 		}
+		addLog(LocalTime.now() + ": inspector-request received.");
 		return null;
 	}
 	
@@ -339,5 +360,28 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 			updateFile();
 		}
 		return randomNumbers.get(ld);
+	}
+	
+	public static RegistrarImplementation getImpl() {
+		return RegistrarImplementation.impl;
+	}
+	
+	public static void setController(RegistrarController controller) {
+		RegistrarImplementation.controller = controller;
+		Platform.runLater(new Runnable() {
+		    @Override
+		    public void run() {
+		    	controller.updateInfo(RegistrarImplementation.impl.users.size(), RegistrarImplementation.impl.cateringFacilitys.size());
+		    }
+		});
+	}
+	
+	private void addLog(String log) {
+		Platform.runLater(new Runnable() {
+		    @Override
+		    public void run() {
+		    	RegistrarImplementation.controller.addLog(log);
+		    }
+		});
 	}
 }

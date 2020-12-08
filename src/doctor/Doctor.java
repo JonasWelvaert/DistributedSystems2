@@ -96,9 +96,19 @@ public class Doctor extends Application {
 				KeyPairGenerator kpg;
 				kpg = KeyPairGenerator.getInstance("RSA");
 				keyPair = kpg.generateKeyPair();
-				// TODO info init.
-
-			} catch (NoSuchAlgorithmException e1) {
+				//publish public key
+				PublicKey pubkey = keyPair.getPublic();
+				String s1 = Base64.getEncoder().encodeToString(pubkey.getEncoded());
+				
+				File file = new File(Values.FILE_DIR, "artsPublicKey.txt");
+				FileWriter fw = new FileWriter(file);
+				BufferedWriter writer = new BufferedWriter(fw);
+				
+				writer.write(s1);
+				
+				writer.flush();
+				writer.close();
+			} catch (NoSuchAlgorithmException | IOException e1) {
 				e1.printStackTrace();
 			}
 		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
@@ -178,7 +188,6 @@ public class Doctor extends Application {
 				Signature signature = Signature.getInstance("SHA256withRSA");
 				SignedObject signedObject = new SignedObject(l,keyPair.getPrivate(),signature);
 				Doctor.logs.add(signedObject);
-				
 			}
 			nrOfUnsendPatients++;
 			updateFile();

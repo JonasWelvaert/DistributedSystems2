@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.text.Font?>
+
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="679.0" prefWidth="398.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="registrar.RegistrarController">
+   <children>
+      <Label alignment="CENTER" layoutX="14.0" layoutY="14.0" prefHeight="55.0" prefWidth="355.0" text="Registrar" underline="true">
+         <font>
+            <Font size="35.0" />
+         </font>
+      </Label>
+      <Label alignment="CENTER_RIGHT" layoutX="59.0" layoutY="69.0" prefHeight="34.0" prefWidth="133.0" text="#Users: " />
+      <Label fx:id="userLabel" layoutX="214.0" layoutY="69.0" prefHeight="34.0" prefWidth="65.0" text="0" />
+      <Label alignment="CENTER_RIGHT" layoutX="59.0" layoutY="93.0" prefHeight="34.0" prefWidth="133.0" text="#Catering Facilties: " />
+      <Label fx:id="cateringLabel" layoutX="214.0" layoutY="93.0" prefHeight="34.0" prefWidth="65.0" text="0" />
+      <ListView fx:id="logsList" layoutX="9.0" layoutY="171.0" prefHeight="498.0" prefWidth="380.0" />
+      <Label alignment="CENTER" layoutX="106.0" layoutY="127.0" prefHeight="34.0" prefWidth="175.0" text="Logs">
+         <font>
+            <Font size="25.0" />
+         </font>
+      </Label>
+   </children>
+</AnchorPane>

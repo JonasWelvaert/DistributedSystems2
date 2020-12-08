@@ -33,7 +33,7 @@ public class Test {
 	public static void main(String[] args) throws Exception {
 		// testSignature();
 		new Thread(() -> Registrar.main(args)).run();
-		new Thread(() -> MatchingService.main(args)).run();
+		//new Thread(() -> MatchingService.launch(args)).run();
 		new Thread(() -> MixingProxy.main(args)).run();
 
 		//testCopyToClipboard();

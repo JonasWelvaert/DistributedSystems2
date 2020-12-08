@@ -26,6 +26,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Calendar;
@@ -45,7 +46,10 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
+import javafx.application.Platform;
 import matchingservice.MatchingService;
+import matchingservice.MatchingServiceController;
+import matchingservice.MatchingServiceImplementation;
 import matchingservice.MatchingServiceInterface;
 import registrar.RegistrarInterface;
 import sharedclasses.Capsule;
@@ -58,10 +62,13 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 	private PublicKey registrarPubK;
 	private List<Capsule> capsules = new ArrayList<>();
 	private KeyPair keyPair;
+	
+	private transient static List<String> logs = new ArrayList<>();
+	private transient static MixingProxyController controller;
+	private transient static MixingProxyImplementation impl;
 
 	protected MixingProxyImplementation() throws RemoteException {
-		// super(Values.MIXINGPROXY_PORT, new SslRMIClientSocketFactory(), new
-		// SslRMIServerSocketFactory());
+		MixingProxyImplementation.impl = this;
 		try {
 			File file = new File(Values.FILE_DIR + "mixingproxy.csv");
 			Scanner scanner = new Scanner(file);
@@ -132,6 +139,8 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		}
 
 		// flusing capsules to matchingservice, everyday 3AM:
+		//disabled for presentation
+		/*
 		Calendar today = Calendar.getInstance();
 		today.set(Calendar.HOUR_OF_DAY, 3);
 		today.set(Calendar.MINUTE, 0);
@@ -143,22 +152,7 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 				sendCapsulesToMatchingService();
 			}
 		}, today.getTime(), TimeUnit.MILLISECONDS.convert(1, TimeUnit.DAYS));
-
-		JFrame f = new JFrame();
-		f.setTitle("Mixing Proxy");
-		JButton button = new JButton("Flush capsules to mixing service");
-		button.setBounds(130,100,150,40);
-		button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				sendCapsulesToMatchingService();
-			}
-		});
-		f.add(button);
-		f.setSize(400,500);
-		f.setLayout(null);
-		f.setVisible(true);
+		*/
 	}
 
 	private void updateFile() {
@@ -194,6 +188,12 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 
 			bw.flush();
 			bw.close();
+			Platform.runLater(new Runnable() {
+			    @Override
+			    public void run() {
+			    	controller.updateInfo(capsules.size());
+			    }
+			});
 		} catch (IOException e) {
 			System.err.println("error in updateFile()-method.");
 			e.printStackTrace();
@@ -225,6 +225,8 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 		if (sign != null) {
 			capsules.add(capsule);
 			updateFile();
+			addLog(LocalDateTime.now().toLocalTime() + ": capsule received to mark visit; location:");
+			addLog("\t\t" + capsule.getHash());
 			return sign;
 		}
 		System.out.println("MixingProxy || registervisit | Signing failed.");
@@ -235,9 +237,9 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 	public void acknowledge(List<Token> tokens) {
 		try {
 			Registry myRegistry = LocateRegistry.getRegistry(Values.MATCHINGSERVICE_HOSTNAME, Values.MATCHINGSERVICE_PORT);
-			MatchingServiceInterface matchingService = (MatchingServiceInterface) myRegistry.lookup(Values.MATCHINGSERVICE_SERVICE);
-			
+			MatchingServiceInterface matchingService = (MatchingServiceInterface) myRegistry.lookup(Values.MATCHINGSERVICE_SERVICE);	
 			matchingService.submitAcknowledgements(tokens);
+			addLog(LocalDateTime.now().toLocalTime() + ": " + tokens.size() + " tokens passed through for acknowledgement.");
 		} catch (RemoteException | NotBoundException e) {
 			e.printStackTrace();
 		}
@@ -258,7 +260,7 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 
 	}
 
-	private synchronized void sendCapsulesToMatchingService() {
+	public synchronized void sendCapsulesToMatchingService() {
 		try {
 			Registry myRegistry;
 			myRegistry = LocateRegistry.getRegistry(Values.MATCHINGSERVICE_HOSTNAME, Values.MATCHINGSERVICE_PORT);
@@ -267,9 +269,32 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 			matchingService.submitCapsules(capsules);
 			capsules.clear();
 			updateFile();
+			addLog(LocalDateTime.now().toLocalTime() + ": queue flushed to Matching Server");
 		} catch (RemoteException | NotBoundException e) {
 			e.printStackTrace();
 		}
 	}
 
+	private static void addLog(String log) {
+		Platform.runLater(new Runnable() {
+		    @Override
+		    public void run() {
+		    	MixingProxyImplementation.controller.addLog(log);
+		    }
+		});
+	}
+	
+	public static void setController(MixingProxyController controller) {
+		MixingProxyImplementation.controller = controller;
+		Platform.runLater(new Runnable() {
+		    @Override
+		    public void run() {
+		    	controller.updateInfo(MixingProxyImplementation.impl.capsules.size());
+		    }
+		});
+	}
+	
+	public static MixingProxyImplementation getImpl() {
+		return MixingProxyImplementation.impl;
+	}
 }

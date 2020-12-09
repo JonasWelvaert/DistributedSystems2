@@ -310,7 +310,10 @@ public class RegistrarImplementation extends UnicastRemoteObject implements Regi
 		}
 		//create a file for this date
 		try {
+			File dir = new File(Values.FILE_DIR + "toNotify/");
+			dir.mkdir();
 			File file = new File(Values.FILE_DIR, "toNotify/" + LocalDate.now().toString() + ".txt");
+			file.createNewFile();
 			FileWriter fw = new FileWriter(file);
 			BufferedWriter writer = new BufferedWriter(fw);
 			

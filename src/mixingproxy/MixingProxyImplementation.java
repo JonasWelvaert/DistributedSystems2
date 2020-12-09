@@ -1,7 +1,5 @@
 package mixingproxy;
 
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,15 +27,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -47,9 +38,6 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import javafx.application.Platform;
-import matchingservice.MatchingService;
-import matchingservice.MatchingServiceController;
-import matchingservice.MatchingServiceImplementation;
 import matchingservice.MatchingServiceInterface;
 import registrar.RegistrarInterface;
 import sharedclasses.Capsule;
@@ -63,7 +51,6 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 	private List<Capsule> capsules = new ArrayList<>();
 	private KeyPair keyPair;
 	
-	private transient static List<String> logs = new ArrayList<>();
 	private transient static MixingProxyController controller;
 	private transient static MixingProxyImplementation impl;
 

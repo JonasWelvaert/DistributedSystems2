@@ -1,8 +1,6 @@
 package sharedclasses;
 
 import java.io.Serializable;
-import java.security.PublicKey;
-import java.security.Signature;
 import java.time.LocalDateTime;
 
 public class Log implements Serializable {

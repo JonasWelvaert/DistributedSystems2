@@ -11,7 +11,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-import matchingservice.MatchingService;
 import values.Values;
 
 public class MixingProxy extends Application{

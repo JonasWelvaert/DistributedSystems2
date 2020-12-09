@@ -12,7 +12,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import values.Values;
-import visitor.Visitor;
 
 public class MatchingService extends Application{
 

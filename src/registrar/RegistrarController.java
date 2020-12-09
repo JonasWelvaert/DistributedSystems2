@@ -10,7 +10,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 
 public class RegistrarController {
-	private RegistrarImplementation registrar;
 	private ObservableList<String> toObserve;
 	
     @FXML
@@ -24,7 +23,6 @@ public class RegistrarController {
 
     @FXML
     void initialize() {
-    	registrar = RegistrarImplementation.getImpl();
     	RegistrarImplementation.setController(this);
     	toObserve = FXCollections.observableList(new ArrayList<>());
     	logsList.setItems(toObserve);

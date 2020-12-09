@@ -1,7 +1,4 @@
 package matchingservice;
-
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -35,10 +32,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
-import javax.swing.JButton;
-import javax.swing.JFrame;
 
 import java.util.Scanner;
 
@@ -49,13 +42,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
-import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
-import registrar.RegistrarImplementation;
 import registrar.RegistrarInterface;
 import sharedclasses.Capsule;
 import sharedclasses.Log;
@@ -63,7 +50,6 @@ import sharedclasses.SystemException;
 import sharedclasses.Token;
 import sharedclasses.Tuple;
 import values.Values;
-import visitor.Visitor;
 
 public class MatchingServiceImplementation extends UnicastRemoteObject implements MatchingServiceInterface {
 
@@ -321,6 +307,7 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 			BufferedReader reader = new BufferedReader(new FileReader(new File(Values.FILE_DIR, "artsPublicKey.txt")));
 			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 			X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(Base64.getDecoder().decode(reader.readLine()));
+			reader.close();
 			return keyFactory.generatePublic(pubSpec);
 		} catch (IOException | InvalidKeySpecException | NoSuchAlgorithmException e) {
 			e.printStackTrace();

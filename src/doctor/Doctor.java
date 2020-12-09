@@ -42,8 +42,6 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import matchingservice.MatchingServiceInterface;
-import registrar.RegistrarInterface;
-import sharedclasses.Capsule;
 import sharedclasses.Log;
 import values.Values;
 

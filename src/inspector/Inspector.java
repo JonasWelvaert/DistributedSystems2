@@ -11,7 +11,6 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Base64;
 
-import barowner.BarOwner;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;

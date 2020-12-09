@@ -213,7 +213,7 @@ public class MixingProxyImplementation extends UnicastRemoteObject implements Mi
 			capsules.add(capsule);
 			updateFile();
 			addLog(LocalDateTime.now().toLocalTime() + ": capsule received to mark visit; location:");
-			addLog("\t\t" + capsule.getHash());
+			addLog("\t\t" + new String(capsule.getHash()));
 			return sign;
 		}
 		System.out.println("MixingProxy || registervisit | Signing failed.");

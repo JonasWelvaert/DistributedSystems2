@@ -181,6 +181,7 @@ public class MatchingServiceImplementation extends UnicastRemoteObject implement
 				caps.setInformed(true);
 			});
 			updateFile();
+			this.criticalIntervals = new HashMap<LocalDate, List<Tuple>>();
 			addLog(LocalTime.now() + ": flushing to registrar...");
 		} catch (RemoteException | NotBoundException e) {
 			e.printStackTrace();
